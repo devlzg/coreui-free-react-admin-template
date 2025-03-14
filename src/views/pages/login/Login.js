@@ -1,5 +1,5 @@
-import React from 'react'
-import { Link } from 'react-router-dom'
+import { cilLockLocked, cilUser } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
 import {
   CButton,
   CCard,
@@ -13,8 +13,34 @@ import {
   CInputGroupText,
   CRow,
 } from '@coreui/react'
-import CIcon from '@coreui/icons-react'
-import { cilLockLocked, cilUser } from '@coreui/icons'
+import { useState } from 'react'
+import { Link } from 'react-router-dom'
+
+const formatCPF = (value) => {
+  return value
+    .replace(/\D/g, '') // Remove não números
+    .replace(/(\d{3})(\d)/, '$1.$2') // Coloca um ponto depois do terceiro dígito
+    .replace(/(\d{3})(\d)/, '$1.$2') // Coloca um ponto depois do sexto dígito
+    .replace(/(\d{3})(\d{1,2})$/, '$1-$2') // Coloca um traço antes dos últimos 2 dígitos
+}
+
+const removeMask = (value) => {
+  return value.replace(/\D/g, '') // Remove todos os caracteres não numéricos
+}
+
+const CPFInput = () => {
+  const [cpf, setCpf] = useState('')
+
+  const handleChange = (e) => {
+    const rawValue = e.target.value
+    setCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
+  }
+
+  const handleSubmit = () => {
+    const cpfSemMascara = removeMask(cpf)
+    console.log('CPF enviado:', cpfSemMascara) // Enviar este valor para o backend
+  }
+}
 
 const Login = () => {
   return (
@@ -28,12 +54,14 @@ const Login = () => {
                   <CForm>
                     <h1>Login</h1>
                     <p className="text-body-secondary"></p>
+                    {/*input de cpf */}
                     <CInputGroup className="mb-3">
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
                       <CFormInput placeholder="CPF" autoComplete="username" />
                     </CInputGroup>
+                    {/*input de senha */}
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
