@@ -28,7 +28,7 @@ const removeMask = (value) => {
   return value.replace(/\D/g, '') // Remove todos os caracteres não numéricos
 }
 
-const CPFInput = () => {
+const Login = () => {
   const [cpf, setCpf] = useState('')
 
   const handleChange = (e) => {
@@ -36,13 +36,12 @@ const CPFInput = () => {
     setCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
   }
 
-  const handleSubmit = () => {
+  const handleSubmit = (e) => {
+    e.preventDefault()
     const cpfSemMascara = removeMask(cpf)
     console.log('CPF enviado:', cpfSemMascara) // Enviar este valor para o backend
   }
-}
 
-const Login = () => {
   return (
     <div className="bg-body-tertiary min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
@@ -51,7 +50,7 @@ const Login = () => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm>
+                  <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
                     <p className="text-body-secondary"></p>
                     {/*input de cpf */}
@@ -59,22 +58,25 @@ const Login = () => {
                       <CInputGroupText>
                         <CIcon icon={cilUser} />
                       </CInputGroupText>
-                      <CFormInput placeholder="CPF" autoComplete="username" />
+                      <CFormInput
+                        type="text"
+                        maxLength="14"
+                        value={cpf}
+                        onChange={handleChange}
+                        placeholder="Digite seu CPF"
+                        name="loginCpfForm"
+                      />
                     </CInputGroup>
                     {/*input de senha */}
                     <CInputGroup className="mb-4">
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
                       </CInputGroupText>
-                      <CFormInput
-                        type="password"
-                        placeholder="Senha"
-                        autoComplete="current-password"
-                      />
+                      <CFormInput type="password" placeholder="Senha" name="loginSenhaform" />
                     </CInputGroup>
                     <CRow>
                       <CCol xs={6}>
-                        <CButton color="primary" className="px-4">
+                        <CButton color="primary" className="px-4" type="submit">
                           Entrar
                         </CButton>
                       </CCol>
