@@ -65,6 +65,7 @@ const Login = () => {
                         onChange={handleChange}
                         placeholder="Digite seu CPF"
                         name="loginCpfForm"
+                        required
                       />
                     </CInputGroup>
                     {/*input de senha */}
@@ -72,7 +73,12 @@ const Login = () => {
                       <CInputGroupText>
                         <CIcon icon={cilLockLocked} />
                       </CInputGroupText>
-                      <CFormInput type="password" placeholder="Senha" name="loginSenhaform" />
+                      <CFormInput
+                        type="password"
+                        placeholder="Senha"
+                        name="loginSenhaform"
+                        required
+                      />
                     </CInputGroup>
                     <CRow>
                       <CCol xs={6}>
