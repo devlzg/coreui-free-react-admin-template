@@ -15,15 +15,7 @@ import {
   useColorModes,
 } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-import {
-  cilBell,
-  cilContrast,
-  cilEnvelopeOpen,
-  cilList,
-  cilMenu,
-  cilMoon,
-  cilSun,
-} from '@coreui/icons'
+import { cilContrast, cilMenu, cilMoon, cilSun } from '@coreui/icons'
 
 import { AppBreadcrumb } from './index'
 import { AppHeaderDropdown } from './header/index'
@@ -81,7 +73,7 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('light')}
               >
-                <CIcon className="me-2" icon={cilSun} size="lg" /> Light
+                <CIcon className="me-2" icon={cilSun} size="lg" /> Tema Claro
               </CDropdownItem>
               <CDropdownItem
                 active={colorMode === 'dark'}
@@ -90,7 +82,7 @@ const AppHeader = () => {
                 type="button"
                 onClick={() => setColorMode('dark')}
               >
-                <CIcon className="me-2" icon={cilMoon} size="lg" /> Dark
+                <CIcon className="me-2" icon={cilMoon} size="lg" /> Tema Escuro
               </CDropdownItem>
             </CDropdownMenu>
           </CDropdown>

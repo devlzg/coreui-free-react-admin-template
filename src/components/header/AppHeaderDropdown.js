@@ -9,41 +9,31 @@ import {
   CDropdownMenu,
   CDropdownToggle,
 } from '@coreui/react'
-import {
-  cilBell,
-  cilCreditCard,
-  cilCommentSquare,
-  cilEnvelopeOpen,
-  cilFile,
-  cilLockLocked,
-  cilSettings,
-  cilTask,
-  cilUser,
-} from '@coreui/icons'
+import { cilAccountLogout, cilSettings, cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 
-import avatar8 from './../../assets/images/avatars/8.png'
+import userIcon from './../../assets/images/avatars/userIcon.png'
 
 const AppHeaderDropdown = () => {
   return (
     <CDropdown variant="nav-item">
       <CDropdownToggle placement="bottom-end" className="py-0 pe-0" caret={false}>
-        <CAvatar src={avatar8} size="md" />
+        <CAvatar src={userIcon} size="md" />
       </CDropdownToggle>
       <CDropdownMenu className="pt-0" placement="bottom-end">
-        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Account</CDropdownHeader>
+        <CDropdownHeader className="bg-body-secondary fw-semibold mb-2">Conta</CDropdownHeader>
         <CDropdownItem href="#">
           <CIcon icon={cilUser} className="me-2" />
-          Profile
+          Perfil
         </CDropdownItem>
         <CDropdownItem href="#">
           <CIcon icon={cilSettings} className="me-2" />
-          Settings
+          Configurações
         </CDropdownItem>
         <CDropdownDivider />
         <CDropdownItem href="#">
-          <CIcon icon={cilLockLocked} className="me-2" />
-          Lock Account
+          <CIcon icon={cilAccountLogout} className="me-2" />
+          Sair
         </CDropdownItem>
       </CDropdownMenu>
     </CDropdown>
