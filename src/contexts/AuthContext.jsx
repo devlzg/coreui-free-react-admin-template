@@ -6,6 +6,7 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [userCpf, setUserCpf] = useState('')
   const navigate = useNavigate()
+  localStorage.setItem('usuarioAutenticado', false)
 
   const login = async (cpf, senha) => {
     const token = import.meta.env.VITE_API_TOKEN
@@ -62,6 +63,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   function isAuthenticated() {
+    console.log('Autenticando usuário...')
     return localStorage.getItem('usuarioAutenticado') === 'true'
   }
 

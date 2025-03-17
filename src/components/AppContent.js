@@ -1,6 +1,7 @@
+import { CContainer, CSpinner } from '@coreui/react'
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import { CContainer, CSpinner } from '@coreui/react'
+import PrivateRoute from './PrivateRoute'
 
 // routes config
 import routes from '../routes'
@@ -18,12 +19,27 @@ const AppContent = () => {
                   path={route.path}
                   exact={route.exact}
                   name={route.name}
-                  element={<route.element />}
+                  element={
+                    route.path === '/dashboard' ? (
+                      <PrivateRoute>
+                        <route.element />
+                      </PrivateRoute>
+                    ) : (
+                      <route.element />
+                    )
+                  }
                 />
               )
             )
           })}
-          <Route path="/" element={<Navigate to="dashboard" replace />} />
+          <Route
+            path="/"
+            element={
+              <PrivateRoute>
+                <Navigate to="dashboard" replace />
+              </PrivateRoute>
+            }
+          />
         </Routes>
       </Suspense>
     </CContainer>
