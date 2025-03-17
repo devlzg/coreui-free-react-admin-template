@@ -13,8 +13,9 @@ import {
   CInputGroupText,
   CRow,
 } from '@coreui/react'
-import { useState } from 'react'
+import { useContext, useState } from 'react'
 import { Link } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext'
 
 const formatCPF = (value) => {
   return value
@@ -29,24 +30,24 @@ const removeMask = (value) => {
 }
 
 const Login = () => {
-  const [cpf, setCpf] = useState('')
+  const { login } = useAuth()
+  const { userCpf, setUserCpf } = useAuth()
   const [senha, setSenha] = useState('')
 
   const handleChangeCpf = (e) => {
     const rawValue = e.target.value
-    setCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
+    setUserCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
   }
 
   const handleChangeSenha = (e) => {
     setSenha(e.target.value)
   }
 
-  const token = import.meta.env.VITE_API_TOKEN
-  const apiUrl = import.meta.env.VITE_API_ENDPOINT
-
-  const handleLogin = (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault()
-    const cpfSemMascara = removeMask(cpf)
+    console.log('enviando credenciais: ', userCpf, senha)
+    const cpfSemMascara = removeMask(userCpf)
+    login(cpfSemMascara, senha)
   }
 
   return (
@@ -57,7 +58,7 @@ const Login = () => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm onSubmit={handleLogin}>
+                  <CForm onSubmit={handleSubmit}>
                     <h1>Login</h1>
                     <p className="text-body-secondary"></p>
                     {/*input de cpf */}
@@ -68,7 +69,7 @@ const Login = () => {
                       <CFormInput
                         type="text"
                         maxLength="14"
-                        value={cpf}
+                        value={userCpf}
                         onChange={handleChangeCpf}
                         placeholder="Digite seu CPF"
                         name="loginCpfForm"

@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router-dom'
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const [userCpf, setUserCpf] = useState(null)
+  const [userCpf, setUserCpf] = useState('')
   const navigate = useNavigate()
 
   const login = async (cpf, senha) => {
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
       if (data.codigo === 1) {
         console.log(data.dados.msgAcesso)
         setUserCpf(cpf)
-        localStorage.setItem('cpf', cpf)
+        localStorage.setItem('usuarioAutenticado', true)
         navigate('/dashboard')
       }
 
@@ -43,6 +43,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   const register = (cpf, senha) => {
+    // Isso aqui não serve pra nada, preciso fazer a logica de cadastro quando
+    // conseguir acesso total à api
     const users = JSON.parse(localStorage.getItem('registeredUsers')) || []
 
     if (cpf in users) {
@@ -59,8 +61,12 @@ export const AuthProvider = ({ children }) => {
     console.log(users)
   }
 
+  function isAuthenticated() {
+    return localStorage.getItem('usuarioAutenticado') === 'true'
+  }
+
   return (
-    <AuthContext.Provider value={{ userCpf, login, logout, register }}>
+    <AuthContext.Provider value={{ userCpf, setUserCpf, login, logout, register, isAuthenticated }}>
       {children}
     </AuthContext.Provider>
   )

@@ -95,7 +95,7 @@ const Register = () => {
                     />
                   </CInputGroup>
                   <div className="d-grid">
-                    <CButton color="success" type="submit">
+                    <CButton color="success" type="submit" style={{ color: 'white' }}>
                       Criar conta
                     </CButton>
                   </div>
