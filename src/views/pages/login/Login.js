@@ -41,13 +41,12 @@ const Login = () => {
     setSenha(e.target.value)
   }
 
-  const handleSubmit = (e) => {
+  const token = import.meta.env.VITE_API_TOKEN
+  const apiUrl = import.meta.env.VITE_API_ENDPOINT
+
+  const handleLogin = (e) => {
     e.preventDefault()
     const cpfSemMascara = removeMask(cpf)
-    console.log('CPF enviado:', cpfSemMascara) // Enviar este valor para o backend
-    console.log('Senha: ', senha)
-    console.log(import.meta.env.VITE_API_TOKEN)
-    console.log(import.meta.env.VITE_API_ENDPOINT)
   }
 
   return (
@@ -58,7 +57,7 @@ const Login = () => {
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
-                  <CForm onSubmit={handleSubmit}>
+                  <CForm onSubmit={handleLogin}>
                     <h1>Login</h1>
                     <p className="text-body-secondary"></p>
                     {/*input de cpf */}
