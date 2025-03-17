@@ -1,10 +1,17 @@
-import { createContext, useContext, useState } from 'react'
+import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const [userCpf, setUserCpf] = useState('')
+  const cpfArmazenado = localStorage.getItem('userCpf')
+  const [userCpf, setUserCpf] = useState(cpfArmazenado || '')
+
+  useEffect(() => {
+    // Salvando o estado no localStorage sempre que o estado mudar
+    localStorage.setItem('userCpf', userCpf)
+  }, [userCpf])
+
   const navigate = useNavigate()
 
   const login = async (cpf, senha) => {
@@ -37,7 +44,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     setUserCpf(null)
-    localStorage.removeItem('cpf')
+    localStorage.removeItem('userCpf')
   }
 
   const register = (cpf, senha) => {
@@ -60,7 +67,11 @@ export const AuthProvider = ({ children }) => {
   }
 
   function isAuthenticated() {
-    return localStorage.getItem('userCpf') === userCpf
+    const storedCpf = localStorage.getItem('userCpf')
+    const isAuth = storedCpf === userCpf && userCpf !== ''
+
+    localStorage.setItem('isAuthenticated', isAuth.toString()) // Sempre salva como string
+    return isAuth // Retorna um booleano
   }
 
   return (
