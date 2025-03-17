@@ -1,7 +1,6 @@
 import React, { Suspense, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import { HashRouter, Route, Routes } from 'react-router-dom'
-import PrivateRoute from './components/PrivateRoute.js'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 
 import { CSpinner, useColorModes } from '@coreui/react'

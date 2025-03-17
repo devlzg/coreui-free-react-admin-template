@@ -6,7 +6,6 @@ const AuthContext = createContext()
 export const AuthProvider = ({ children }) => {
   const [userCpf, setUserCpf] = useState('')
   const navigate = useNavigate()
-  localStorage.setItem('usuarioAutenticado', false)
 
   const login = async (cpf, senha) => {
     const token = import.meta.env.VITE_API_TOKEN
@@ -21,12 +20,10 @@ export const AuthProvider = ({ children }) => {
       })
 
       const data = await response.json()
-      console.log(data)
 
       if (data.codigo === 1) {
-        console.log(data.dados.msgAcesso)
         setUserCpf(cpf)
-        localStorage.setItem('usuarioAutenticado', true)
+        localStorage.setItem('userCpf', cpf)
         navigate('/dashboard')
       }
 
@@ -63,8 +60,7 @@ export const AuthProvider = ({ children }) => {
   }
 
   function isAuthenticated() {
-    console.log('Autenticando usuário...')
-    return localStorage.getItem('usuarioAutenticado') === 'true'
+    return localStorage.getItem('userCpf') === userCpf
   }
 
   return (

@@ -45,7 +45,6 @@ const Login = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
-    console.log('enviando credenciais: ', userCpf, senha)
     const cpfSemMascara = removeMask(userCpf)
     login(cpfSemMascara, senha)
   }
@@ -73,6 +72,7 @@ const Login = () => {
                         onChange={handleChangeCpf}
                         placeholder="Digite seu CPF"
                         name="loginCpfForm"
+                        autoComplete="on"
                         required
                       />
                     </CInputGroup>
@@ -87,6 +87,7 @@ const Login = () => {
                         name="loginSenhaform"
                         value={senha}
                         onChange={handleChangeSenha}
+                        autoComplete="current-password"
                         required
                       />
                     </CInputGroup>
