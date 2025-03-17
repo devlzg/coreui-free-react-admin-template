@@ -30,16 +30,24 @@ const removeMask = (value) => {
 
 const Login = () => {
   const [cpf, setCpf] = useState('')
+  const [senha, setSenha] = useState('')
 
-  const handleChange = (e) => {
+  const handleChangeCpf = (e) => {
     const rawValue = e.target.value
     setCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
+  }
+
+  const handleChangeSenha = (e) => {
+    setSenha(e.target.value)
   }
 
   const handleSubmit = (e) => {
     e.preventDefault()
     const cpfSemMascara = removeMask(cpf)
     console.log('CPF enviado:', cpfSemMascara) // Enviar este valor para o backend
+    console.log('Senha: ', senha)
+    console.log(import.meta.env.VITE_API_TOKEN)
+    console.log(import.meta.env.VITE_API_ENDPOINT)
   }
 
   return (
@@ -62,7 +70,7 @@ const Login = () => {
                         type="text"
                         maxLength="14"
                         value={cpf}
-                        onChange={handleChange}
+                        onChange={handleChangeCpf}
                         placeholder="Digite seu CPF"
                         name="loginCpfForm"
                         required
@@ -77,6 +85,8 @@ const Login = () => {
                         type="password"
                         placeholder="Senha"
                         name="loginSenhaform"
+                        value={senha}
+                        onChange={handleChangeSenha}
                         required
                       />
                     </CInputGroup>
