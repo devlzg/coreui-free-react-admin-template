@@ -17,6 +17,7 @@ import {
   CRow,
 } from '@coreui/react'
 import React, { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const formatCPF = (value) => {
   return value
@@ -40,12 +41,13 @@ const removeMask = (value) => {
 const Register = () => {
   const [cpf, setCpf] = useState('')
   const [nome, setNome] = useState('')
-  const [userRole, setUserRole] = useState('')
+  const [cargo, setCargo] = useState('')
   const [userNumTel, setUserNumTel] = useState('')
   const [senha, setSenha] = useState('')
   const [confirmarSenha, setConfirmarSenha] = useState('') // Estado para a segunda senha
   const [email, setEmail] = useState('')
   const [senhasIguais, setSenhasIguais] = useState(true)
+  const navigate = useNavigate()
 
   const handleChangeCpf = (e) => {
     const rawValue = e.target.value
@@ -57,6 +59,13 @@ const Register = () => {
     setUserNumTel(formatNumTel(rawValue)) // Atualiza o estado com a máscara aplicada
   }
 
+  const removerAcentos = (str) => {
+    return str
+      .normalize('NFD') // Normaliza a string para a forma de decomposição (NFD)
+      .replace(/[\u0300-\u036f]/g, '') // Remove os caracteres diacríticos (acentos)
+      .toLowerCase() // Converte para minúsculas
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault()
 
@@ -66,24 +75,30 @@ const Register = () => {
       return // Impede o envio do formulário
     }
 
-    // Se as senhas forem iguais, continua com o envio
+    if (cargo === '') {
+      alert('É necessário escolher um cargo')
+      return
+    }
+
     setSenhasIguais(true)
 
     const cpfSemMascara = removeMask(cpf)
     const numTelSemMascara = removeMask(userNumTel)
+    const cargoFormatado = removerAcentos(cargo)
     const dadosUsuario = {
       cpf: cpfSemMascara,
       nome: nome,
       telefone: numTelSemMascara,
       email: email,
       senha: senha,
-      cargo: userRole,
+      cargo: cargoFormatado,
     }
-    console.log(dadosUsuario)
+    localStorage.setItem('Dados do usuário', JSON.stringify(dadosUsuario))
+    navigate('/login')
   }
 
-  const handleDropdown = (role) => {
-    setUserRole(role)
+  const handleDropdown = (cargo) => {
+    setCargo(cargo)
   }
 
   return (
@@ -180,17 +195,14 @@ const Register = () => {
                   )}
                   <CInputGroup className="mb-4">
                     <CDropdown>
-                      {userRole != '' ? (
-                        <CDropdownToggle color="primary">{userRole}</CDropdownToggle>
+                      {cargo != '' ? (
+                        <CDropdownToggle color="primary">{cargo}</CDropdownToggle>
                       ) : (
-                        <CDropdownToggle color="primary">Função</CDropdownToggle>
+                        <CDropdownToggle color="primary">Cargo</CDropdownToggle>
                       )}
                       <CDropdownMenu>
                         <CDropdownItem onClick={() => handleDropdown('Usuário')}>
                           Usuário
-                        </CDropdownItem>
-                        <CDropdownItem onClick={() => handleDropdown('Administrador')}>
-                          Administrador
                         </CDropdownItem>
                         <CDropdownItem onClick={() => handleDropdown('Super Usuário')}>
                           Super Usuário
