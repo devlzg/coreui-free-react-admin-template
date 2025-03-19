@@ -43,8 +43,8 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    setUserCpf(null)
     localStorage.removeItem('userCpf')
+    setUserCpf()
   }
 
   const register = (cpf, senha) => {
