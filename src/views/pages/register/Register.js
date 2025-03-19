@@ -43,7 +43,9 @@ const Register = () => {
   const [userRole, setUserRole] = useState('')
   const [userNumTel, setUserNumTel] = useState('')
   const [senha, setSenha] = useState('')
+  const [confirmarSenha, setConfirmarSenha] = useState('') // Estado para a segunda senha
   const [email, setEmail] = useState('')
+  const [senhasIguais, setSenhasIguais] = useState(true)
 
   const handleChangeCpf = (e) => {
     const rawValue = e.target.value
@@ -57,6 +59,16 @@ const Register = () => {
 
   const handleSubmit = (e) => {
     e.preventDefault()
+
+    // Verifica se as senhas são iguais
+    if (senha !== confirmarSenha) {
+      setSenhasIguais(false) // Atualiza o estado para exibir mensagem de erro
+      return // Impede o envio do formulário
+    }
+
+    // Se as senhas forem iguais, continua com o envio
+    setSenhasIguais(true)
+
     const cpfSemMascara = removeMask(cpf)
     const numTelSemMascara = removeMask(userNumTel)
     const dadosUsuario = {
@@ -69,6 +81,7 @@ const Register = () => {
     }
     console.log(dadosUsuario)
   }
+
   const handleDropdown = (role) => {
     setUserRole(role)
   }
@@ -156,28 +169,36 @@ const Register = () => {
                     <CFormInput
                       type="password"
                       placeholder="Digite a senha novamente"
+                      value={confirmarSenha}
+                      onChange={(e) => setConfirmarSenha(e.target.value)}
                       name="registerSenhaNovamenteform"
                       required
                     />
                   </CInputGroup>
-                  <CDropdown>
-                    {userRole != '' ? (
-                      <CDropdownToggle color="primary">{userRole}</CDropdownToggle>
-                    ) : (
-                      <CDropdownToggle color="primary">Função</CDropdownToggle>
-                    )}
-                    <CDropdownMenu>
-                      <CDropdownItem onClick={() => handleDropdown('Usuário')}>
-                        Usuário
-                      </CDropdownItem>
-                      <CDropdownItem onClick={() => handleDropdown('Administrador')}>
-                        Administrador
-                      </CDropdownItem>
-                      <CDropdownItem onClick={() => handleDropdown('Super Usuário')}>
-                        Super Usuário
-                      </CDropdownItem>
-                    </CDropdownMenu>
-                  </CDropdown>
+                  {!senhasIguais && (
+                    <p style={{ color: 'red', marginBottom: '12px' }}>As senhas não são iguais!</p>
+                  )}
+                  <CInputGroup className="mb-4">
+                    <CDropdown>
+                      {userRole != '' ? (
+                        <CDropdownToggle color="primary">{userRole}</CDropdownToggle>
+                      ) : (
+                        <CDropdownToggle color="primary">Função</CDropdownToggle>
+                      )}
+                      <CDropdownMenu>
+                        <CDropdownItem onClick={() => handleDropdown('Usuário')}>
+                          Usuário
+                        </CDropdownItem>
+                        <CDropdownItem onClick={() => handleDropdown('Administrador')}>
+                          Administrador
+                        </CDropdownItem>
+                        <CDropdownItem onClick={() => handleDropdown('Super Usuário')}>
+                          Super Usuário
+                        </CDropdownItem>
+                      </CDropdownMenu>
+                    </CDropdown>
+                  </CInputGroup>
+
                   <div className="d-grid">
                     <CButton
                       color="success"
