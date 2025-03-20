@@ -46,7 +46,6 @@ const _nav = [
     to: '/dashboard',
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
- 
 ]
 
 export default _nav
