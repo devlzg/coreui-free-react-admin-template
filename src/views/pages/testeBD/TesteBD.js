@@ -14,12 +14,11 @@ function TesteBD() {
       .catch((error) => {
         console.error('Error fetching users:', error)
       })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   return (
     <div>
-      <h1>Usuarios</h1>
+      <h1>Usuários</h1>
       <ul>
         {users.map((user) => (
           <li key={user.id}>

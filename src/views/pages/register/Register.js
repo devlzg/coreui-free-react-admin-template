@@ -59,10 +59,11 @@ const Register = () => {
     setUserNumTel(formatNumTel(rawValue)) // Atualiza o estado com a máscara aplicada
   }
 
-  const removerAcentos = (str) => {
+  const removerAcentosEEspacos = (str) => {
     return str
       .normalize('NFD') // Normaliza a string para a forma de decomposição (NFD)
       .replace(/[\u0300-\u036f]/g, '') // Remove os caracteres diacríticos (acentos)
+      .replace(/\s+/g, '') // Remove todos os espaços em branco
       .toLowerCase() // Converte para minúsculas
   }
 
@@ -84,7 +85,7 @@ const Register = () => {
 
     const cpfSemMascara = removeMask(cpf)
     const numTelSemMascara = removeMask(userNumTel)
-    const cargoFormatado = removerAcentos(cargo)
+    const cargoFormatado = removerAcentosEEspacos(cargo)
     const dadosUsuario = {
       cpf: cpfSemMascara,
       nome: nome,
