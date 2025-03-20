@@ -1,36 +1,24 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { login as authLogin } from './services/authService.js'
+import { getStoredCpf, removeStoredCpf, setIsAuthenticated, setStoredCpf } from './utils/storage'
 
 const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-  const cpfArmazenado = localStorage.getItem('userCpf')
-  const [userCpf, setUserCpf] = useState(cpfArmazenado || '')
-
-  useEffect(() => {
-    // Salvando o estado no localStorage sempre que o estado mudar
-    localStorage.setItem('userCpf', userCpf)
-  }, [userCpf])
-
+  const [userCpf, setUserCpf] = useState(getStoredCpf() || '')
   const navigate = useNavigate()
 
+  useEffect(() => {
+    setStoredCpf(userCpf)
+  }, [userCpf])
+
   const login = async (cpf, senha) => {
-    const token = import.meta.env.VITE_API_TOKEN
-
     try {
-      const response = await fetch(import.meta.env.VITE_API_ENDPOINT, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ token, cpf, senha }),
-      })
-
-      const data = await response.json()
+      const data = await authLogin(cpf, senha)
 
       if (data.codigo === 1) {
         setUserCpf(cpf)
-        localStorage.setItem('userCpf', cpf)
         navigate('/dashboard')
       }
 
@@ -43,35 +31,19 @@ export const AuthProvider = ({ children }) => {
   }
 
   const logout = () => {
-    localStorage.removeItem('userCpf')
-    setUserCpf()
+    removeStoredCpf()
+    setUserCpf('')
   }
 
   const register = (cpf, senha) => {
-    // Isso aqui não serve pra nada, preciso fazer a logica de cadastro quando
-    // conseguir acesso total à api
-    const users = JSON.parse(localStorage.getItem('registeredUsers')) || []
-
-    if (cpf in users) {
-      alert('Usuário já registrado!')
-      return
-    } else {
-      users.push({ cpf, senha })
-    }
-
-    localStorage.setItem('registeredUsers', JSON.stringify(users))
-
-    console.log('Usuário registrado com sucesso!')
-
-    console.log(users)
+    // Lógica de registro aqui
   }
 
-  function isAuthenticated() {
-    const storedCpf = localStorage.getItem('userCpf')
+  const isAuthenticated = () => {
+    const storedCpf = getStoredCpf()
     const isAuth = storedCpf === userCpf && userCpf !== ''
-
-    localStorage.setItem('isAuthenticated', isAuth.toString()) // Sempre salva como string
-    return isAuth // Retorna um booleano
+    setIsAuthenticated(isAuth)
+    return isAuth
   }
 
   return (
