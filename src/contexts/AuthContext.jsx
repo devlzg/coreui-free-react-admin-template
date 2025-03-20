@@ -1,6 +1,8 @@
+import axios from 'axios'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { login as authLogin } from './services/authService.js'
+import { login as authLogin } from './services/authServiceLogin.js'
+import { register as authRegister } from './services/authServiceRegister.js'
 import { getStoredCpf, removeStoredCpf, setIsAuthenticated, setStoredCpf } from './utils/storage'
 
 const AuthContext = createContext()
@@ -35,8 +37,16 @@ export const AuthProvider = ({ children }) => {
     setUserCpf('')
   }
 
-  const register = (cpf, senha) => {
-    // Lógica de registro aqui
+  const register = (dadosUsuario) => {
+    axios
+      .post('http://localhost:5000/api/usuarios', { users: [dadosUsuario] }) // Envia no formato esperado
+      .then((response) => {
+        console.log('User added successfully:', response.data)
+        navigate('/login')
+      })
+      .catch((error) => {
+        console.error('Error adding user:', error)
+      })
   }
 
   const isAuthenticated = () => {

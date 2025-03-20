@@ -18,6 +18,7 @@ import {
 } from '@coreui/react'
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../../../contexts/AuthContext'
 
 const formatCPF = (value) => {
   return value
@@ -39,6 +40,7 @@ const removeMask = (value) => {
 }
 
 const Register = () => {
+  const { register } = useAuth()
   const [cpf, setCpf] = useState('')
   const [nome, setNome] = useState('')
   const [cargo, setCargo] = useState('')
@@ -76,12 +78,12 @@ const Register = () => {
       return // Impede o envio do formulário
     }
 
+    setSenhasIguais(true)
+
     if (cargo === '') {
       alert('É necessário escolher um cargo')
       return
     }
-
-    setSenhasIguais(true)
 
     const cpfSemMascara = removeMask(cpf)
     const numTelSemMascara = removeMask(userNumTel)
@@ -89,13 +91,12 @@ const Register = () => {
     const dadosUsuario = {
       cpf: cpfSemMascara,
       nome: nome,
-      telefone: numTelSemMascara,
+      numTelefone: numTelSemMascara,
       email: email,
       senha: senha,
       cargo: cargoFormatado,
     }
-    localStorage.setItem('Dados do usuário', JSON.stringify(dadosUsuario))
-    navigate('/login')
+    register(dadosUsuario)
   }
 
   const handleDropdown = (cargo) => {
