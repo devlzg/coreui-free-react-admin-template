@@ -39,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
   const register = (dadosUsuario) => {
     axios
-      .post('http://localhost:5000/api/usuarios', { users: [dadosUsuario] }) // Envia no formato esperado
+      .post('http://localhost:5000/api/tb_usuario', { users: [dadosUsuario] }) // Envia no formato esperado
       .then((response) => {
         console.log('User added successfully:', response.data)
         navigate('/login')

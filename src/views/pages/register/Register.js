@@ -44,41 +44,15 @@ const Register = () => {
   const [cpf, setCpf] = useState('')
   const [nome, setNome] = useState('')
   const [cargo, setCargo] = useState('')
-  const [userNumTel, setUserNumTel] = useState('')
-  const [senha, setSenha] = useState('')
-  const [confirmarSenha, setConfirmarSenha] = useState('') // Estado para a segunda senha
   const [email, setEmail] = useState('')
-  const [senhasIguais, setSenhasIguais] = useState(true)
-  const navigate = useNavigate()
 
   const handleChangeCpf = (e) => {
     const rawValue = e.target.value
     setCpf(formatCPF(rawValue)) // Atualiza o estado com a máscara aplicada
   }
 
-  const handleChangeTel = (e) => {
-    const rawValue = e.target.value
-    setUserNumTel(formatNumTel(rawValue)) // Atualiza o estado com a máscara aplicada
-  }
-
-  const removerAcentosEEspacos = (str) => {
-    return str
-      .normalize('NFD') // Normaliza a string para a forma de decomposição (NFD)
-      .replace(/[\u0300-\u036f]/g, '') // Remove os caracteres diacríticos (acentos)
-      .replace(/\s+/g, '') // Remove todos os espaços em branco
-      .toLowerCase() // Converte para minúsculas
-  }
-
   const handleSubmit = (e) => {
     e.preventDefault()
-
-    // Verifica se as senhas são iguais
-    if (senha !== confirmarSenha) {
-      setSenhasIguais(false) // Atualiza o estado para exibir mensagem de erro
-      return // Impede o envio do formulário
-    }
-
-    setSenhasIguais(true)
 
     if (cargo === '') {
       alert('É necessário escolher um cargo')
@@ -86,15 +60,22 @@ const Register = () => {
     }
 
     const cpfSemMascara = removeMask(cpf)
-    const numTelSemMascara = removeMask(userNumTel)
-    const cargoFormatado = removerAcentosEEspacos(cargo)
+    let codCargoTemp = 0
+
+    if (cargo === 'Usuário') {
+      codCargoTemp = 1
+    } else if (cargo === 'Administrador') {
+      codCargoTemp = 2
+    } else if (cargo === 'Super Usuário') {
+      codCargoTemp = 3
+    } else {
+      console.log('Cargo inválido')
+    }
     const dadosUsuario = {
-      cpf: cpfSemMascara,
-      nome: nome,
-      numTelefone: numTelSemMascara,
-      email: email,
-      senha: senha,
-      cargo: cargoFormatado,
+      Usr_CPF: cpfSemMascara,
+      Usr_Nome: nome,
+      Usr_Email: email,
+      Usr_Nac_ID: codCargoTemp,
     }
     register(dadosUsuario)
   }
@@ -141,20 +122,6 @@ const Register = () => {
                     />
                   </CInputGroup>
                   <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilScreenSmartphone} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="text"
-                      placeholder="Telefone"
-                      name="telefone"
-                      maxLength="15"
-                      onChange={handleChangeTel}
-                      value={userNumTel}
-                      required
-                    />
-                  </CInputGroup>
-                  <CInputGroup className="mb-3">
                     <CInputGroupText>@</CInputGroupText>
                     <CFormInput
                       type="email"
@@ -166,35 +133,6 @@ const Register = () => {
                       required
                     />
                   </CInputGroup>
-                  <CInputGroup className="mb-3">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="password"
-                      placeholder="Senha"
-                      value={senha}
-                      onChange={(e) => setSenha(e.target.value)}
-                      name="registerSenhaform"
-                      required
-                    />
-                  </CInputGroup>
-                  <CInputGroup className="mb-4">
-                    <CInputGroupText>
-                      <CIcon icon={cilLockLocked} />
-                    </CInputGroupText>
-                    <CFormInput
-                      type="password"
-                      placeholder="Digite a senha novamente"
-                      value={confirmarSenha}
-                      onChange={(e) => setConfirmarSenha(e.target.value)}
-                      name="registerSenhaNovamenteform"
-                      required
-                    />
-                  </CInputGroup>
-                  {!senhasIguais && (
-                    <p style={{ color: 'red', marginBottom: '12px' }}>As senhas não são iguais!</p>
-                  )}
                   <CInputGroup className="mb-4">
                     <CDropdown>
                       {cargo != '' ? (
@@ -205,6 +143,9 @@ const Register = () => {
                       <CDropdownMenu>
                         <CDropdownItem onClick={() => handleDropdown('Usuário')}>
                           Usuário
+                        </CDropdownItem>
+                        <CDropdownItem onClick={() => handleDropdown('Administrador')}>
+                          Administrador
                         </CDropdownItem>
                         <CDropdownItem onClick={() => handleDropdown('Super Usuário')}>
                           Super Usuário
