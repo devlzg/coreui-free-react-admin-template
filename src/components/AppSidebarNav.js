@@ -11,7 +11,8 @@ export const AppSidebarNav = ({ items, userAccessLevel }) => {
   const userAccessLevelInt = parseInt(userAccessLevel)
   // Função para verificar acesso
   const hasAccess = (item) => {
-    console.log(userAccessLevelInt)
+    // console.log(userAccessLevel)
+    // console.log(userAccessLevelInt)
     return !item.requiredaccesslevel || userAccessLevelInt >= item.requiredaccesslevel
   }
 
