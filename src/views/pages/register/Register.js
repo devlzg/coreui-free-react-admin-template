@@ -28,13 +28,6 @@ const formatCPF = (value) => {
     .replace(/(\d{3})(\d{1,2})$/, '$1-$2') // Coloca um traço antes dos últimos 2 dígitos
 }
 
-const formatNumTel = (value) => {
-  return value
-    .replace(/\D/g, '') // Remove tudo que não for dígito
-    .replace(/^(\d{2})(\d)/, '($1) $2') // Coloca parênteses em volta dos dois primeiros dígitos (DDD)
-    .replace(/(\d{5})(\d)/, '$1-$2') // Coloca um hífen depois do quinto dígito
-}
-
 const removeMask = (value) => {
   return value.replace(/\D/g, '') // Remove todos os caracteres não numéricos
 }
