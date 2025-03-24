@@ -2,7 +2,14 @@ import axios from 'axios'
 import { createContext, useContext, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { login as authLogin } from './services/authServiceLogin.js'
-import { getStoredCpf, removeStoredCpf, setIsAuthenticated, setStoredCpf } from './utils/storage'
+import {
+  getStoredCpf,
+  getStoredNac,
+  removeStoredCpf,
+  setIsAuthenticated,
+  setStoredCpf,
+  setStoredNac,
+} from './utils/storage'
 
 const AuthContext = createContext()
 
@@ -18,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     axios
       .get(`http://localhost:5000/api/tb_usuario/${cpf}`)
       .then((response) => {
-        console.log(response.data)
+        setStoredNac(response.data.Usr_Nac_ID) // Salva no localStorage o nivel de acesso do usuario
       })
       .catch((error) => {
         console.error('Erro ao requisitar usuário:', error)
