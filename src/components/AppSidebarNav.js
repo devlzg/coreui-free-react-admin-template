@@ -1,13 +1,32 @@
+import PropTypes from 'prop-types'
 import React from 'react'
 import { NavLink } from 'react-router-dom'
-import PropTypes from 'prop-types'
 
 import SimpleBar from 'simplebar-react'
 import 'simplebar-react/dist/simplebar.min.css'
 
 import { CBadge, CNavLink, CSidebarNav } from '@coreui/react'
 
-export const AppSidebarNav = ({ items }) => {
+export const AppSidebarNav = ({ items, userAccessLevel }) => {
+  const userAccessLevelInt = parseInt(userAccessLevel)
+  // Função para verificar acesso
+  const hasAccess = (item) => {
+    console.log(userAccessLevelInt)
+    return !item.requiredaccesslevel || userAccessLevelInt >= item.requiredaccesslevel
+  }
+
+  // Filtra itens recursivamente
+  const filterItems = (items) => {
+    return items.filter((item) => {
+      if (!hasAccess(item)) return false
+      if (item.items) {
+        item.items = filterItems(item.items)
+        return item.items.length > 0
+      }
+      return true
+    })
+  }
+
   const navLink = (name, icon, badge, indent = false) => {
     return (
       <>
@@ -60,14 +79,18 @@ export const AppSidebarNav = ({ items }) => {
     )
   }
 
+  const filteredItems = filterItems(items || [])
+
   return (
     <CSidebarNav as={SimpleBar}>
-      {items &&
-        items.map((item, index) => (item.items ? navGroup(item, index) : navItem(item, index)))}
+      {filteredItems.map((item, index) =>
+        item.items ? navGroup(item, index) : navItem(item, index),
+      )}
     </CSidebarNav>
   )
 }
 
 AppSidebarNav.propTypes = {
   items: PropTypes.arrayOf(PropTypes.any).isRequired,
+  userAccessLevel: PropTypes.number.isRequired,
 }

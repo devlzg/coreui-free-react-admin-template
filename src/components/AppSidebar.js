@@ -5,12 +5,15 @@ import { CCloseButton, CSidebar, CSidebarHeader } from '@coreui/react'
 
 import { AppSidebarNav } from './AppSidebarNav'
 
+import { useAuth } from '../contexts/AuthContext'
+
 // sidebar nav config
 import navigation from '../_nav'
 
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const sidebarShow = useSelector((state) => state.sidebarShow)
+  const { userNac } = useAuth()
 
   return (
     <CSidebar
@@ -30,7 +33,7 @@ const AppSidebar = () => {
           onClick={() => dispatch({ type: 'set', sidebarShow: false })}
         />
       </CSidebarHeader>
-      <AppSidebarNav items={navigation} />
+      <AppSidebarNav items={navigation} userAccessLevel={userNac} />
     </CSidebar>
   )
 }
