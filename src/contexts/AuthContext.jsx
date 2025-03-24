@@ -15,17 +15,21 @@ const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
   const [userCpf, setUserCpf] = useState(getStoredCpf() || '')
+  const [userNac, setUserNac] = useState(getStoredNac() || null)
   const navigate = useNavigate()
 
   useEffect(() => {
     setStoredCpf(userCpf)
   }, [userCpf])
+  useEffect(() => {
+    setStoredNac(userNac)
+  }, [userNac])
 
   const getUsrNacIDByCpf = async (cpf) => {
     axios
       .get(`http://localhost:5000/api/tb_usuario/${cpf}`)
       .then((response) => {
-        setStoredNac(response.data.Usr_Nac_ID) // Salva no localStorage o nivel de acesso do usuario
+        setUserNac(response.data.Usr_Nac_ID) // Salva no estado o nivel de acesso do usuario
       })
       .catch((error) => {
         console.error('Erro ao requisitar usuário:', error)
@@ -45,7 +49,6 @@ export const AuthProvider = ({ children }) => {
       if (data.codigo === 3) {
         alert(data.mensagem)
       }
-
       getUsrNacIDByCpf(cpf)
     } catch (error) {
       console.error('Erro na requisição:', error.message)
@@ -78,7 +81,16 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ userCpf, setUserCpf, login, logout, register, isAuthenticated, getUsrNacIDByCpf }}
+      value={{
+        userCpf,
+        setUserCpf,
+        login,
+        logout,
+        register,
+        isAuthenticated,
+        getUsrNacIDByCpf,
+        userNac,
+      }}
     >
       {children}
     </AuthContext.Provider>
