@@ -46,7 +46,7 @@ const App = () => {
           <Routes>
             <Route exact path="/login" name="Login Page" element={<Login />} />
             <Route exact path="/profile" name="Profile Page" element={<Profile />} />
-            <Route exact path="/register" name="Register Page" element={<Register />} />
+            <Route exact path="/cadastro" name="Register Page" element={<Register />} />
             <Route exact path="/404" name="Page 404" element={<Page404 />} />
             <Route path="*" name="Home" element={<DefaultLayout />} />
           </Routes>

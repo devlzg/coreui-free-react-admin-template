@@ -110,7 +110,7 @@ const Login = () => {
                 <CCardBody className="text-center">
                   <div>
                     <h2>Ainda não tem uma conta?</h2>
-                    <Link to="/register">
+                    <Link to="/cadastro">
                       <CButton color="primary" className="mt-3" active tabIndex={-1}>
                         Cadastrar
                       </CButton>

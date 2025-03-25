@@ -29,14 +29,23 @@ export const AuthProvider = ({ children }) => {
     axios
       .get(`http://localhost:5000/api/tb_usuario/${cpf}`)
       .then((response) => {
-        setUserNac(response.data.Usr_Nac_ID) // Salva no estado o nivel de acesso do usuario
+        setUserNac(response.data.Usr_Nac_ID)
       })
       .catch((error) => {
         console.error('Erro ao requisitar usuário:', error)
       })
   }
 
-  // Função que loga com a api do s4e
+  const getAllUsers = async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/tb_usuario')
+      return response.data.tb_usuario
+    } catch (error) {
+      console.error('Erro ao buscar usuários:', error)
+      throw error
+    }
+  }
+
   const login = async (cpf, senha) => {
     try {
       const data = await authLogin(cpf, senha)
@@ -90,6 +99,7 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         getUsrNacIDByCpf,
         userNac,
+        getAllUsers,
       }}
     >
       {children}
