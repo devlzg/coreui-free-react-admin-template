@@ -68,7 +68,7 @@ const Register = () => {
       Usr_CPF: cpfSemMascara,
       Usr_Nome: nome,
       Usr_Email: email,
-      Usr_Nac_ID: codCargoTemp,
+      Usr_Nac_Id: codCargoTemp,
     }
     register(dadosUsuario)
   }

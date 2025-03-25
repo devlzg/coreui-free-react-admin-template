@@ -6,6 +6,7 @@ import {
   getStoredCpf,
   getStoredNac,
   removeStoredCpf,
+  removeStoredNac,
   setIsAuthenticated,
   setStoredCpf,
   setStoredNac,
@@ -25,11 +26,12 @@ export const AuthProvider = ({ children }) => {
     setStoredNac(userNac)
   }, [userNac])
 
-  const getUsrNacIDByCpf = async (cpf) => {
+  const getUsrNacIdByCpf = async (cpf) => {
     axios
       .get(`http://localhost:5000/api/tb_usuario/${cpf}`)
       .then((response) => {
-        setUserNac(response.data.Usr_Nac_ID)
+        console.log(response.data)
+        setUserNac(response.data.Usr_Nac_Id)
       })
       .catch((error) => {
         console.error('Erro ao requisitar usuário:', error)
@@ -58,7 +60,7 @@ export const AuthProvider = ({ children }) => {
       if (data.codigo === 3) {
         alert(data.mensagem)
       }
-      getUsrNacIDByCpf(cpf)
+      getUsrNacIdByCpf(cpf)
     } catch (error) {
       console.error('Erro na requisição:', error.message)
     }
@@ -66,6 +68,7 @@ export const AuthProvider = ({ children }) => {
 
   const logout = () => {
     removeStoredCpf()
+    removeStoredNac()
     setUserCpf('')
   }
 
@@ -97,7 +100,7 @@ export const AuthProvider = ({ children }) => {
         logout,
         register,
         isAuthenticated,
-        getUsrNacIDByCpf,
+        getUsrNacIdByCpf,
         userNac,
         getAllUsers,
       }}

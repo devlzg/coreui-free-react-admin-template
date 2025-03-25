@@ -20,7 +20,7 @@ const AppContent = () => {
                   exact={route.exact}
                   name={route.name}
                   element={
-                    route.path === '/dashboard' ? (
+                    route.path === '/' ? (
                       <PrivateRoute>
                         <route.element />
                       </PrivateRoute>

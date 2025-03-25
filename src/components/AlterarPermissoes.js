@@ -15,10 +15,12 @@ import {
 } from '@coreui/react'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../contexts/AuthContext'
+import axios from 'axios'
 
 const AlterarPermissoes = () => {
   const { getAllUsers } = useAuth()
-  const [users, setUsers] = useState([])
+  const [originalUsers, setOriginalUsers] = useState([]) // Armazena os dados originais
+  const [users, setUsers] = useState([]) // Armazena os dados modificados
   const [alert, setAlert] = useState({ visible: false, message: '', color: '' })
   const [loading, setLoading] = useState(true)
 
@@ -27,16 +29,14 @@ const AlterarPermissoes = () => {
       try {
         const response = await getAllUsers()
 
-        // Verifica se a resposta é um array, se não for, converte ou extrai o array necessário
         let usersData = Array.isArray(response) ? response : []
-
-        // Se a resposta for um objeto com propriedade 'users' (como no register)
         if (response && response.users && Array.isArray(response.users)) {
           usersData = response.users
         }
 
-        // Garante que usersData seja um array antes de setar o estado
-        setUsers(Array.isArray(usersData) ? usersData : [])
+        const formattedUsers = Array.isArray(usersData) ? usersData : []
+        setOriginalUsers([...formattedUsers]) // Guarda cópia dos dados originais
+        setUsers(formattedUsers)
         setLoading(false)
       } catch (error) {
         console.error('Erro ao carregar usuários:', error)
@@ -46,7 +46,8 @@ const AlterarPermissoes = () => {
           color: 'danger',
         })
         setLoading(false)
-        setUsers([]) // Garante que users seja um array vazio em caso de erro
+        setOriginalUsers([])
+        setUsers([])
       }
     }
 
@@ -65,16 +66,75 @@ const AlterarPermissoes = () => {
     )
   }
 
-  const handleSaveChanges = () => {
-    console.log(users)
-    setTimeout(() => {
+  // const updateUsersPermissions = async (changedUsers) => {
+  //   try {
+  //     const response = await axios.put('/api/tb_usuario/update-permissions', {
+  //       users: changedUsers,
+  //     })
+  //     console.log('Resposta do servidor:', response.data)
+  //   } catch (error) {
+  //     console.error('Erro ao atualizar permissões:', error)
+  //     setAlert({
+  //       visible: true,
+  //       message: 'Erro ao atualizar permissões. Tente novamente.',
+  //       color: 'danger',
+  //     })
+  //   }
+  // }
+
+  const handleSaveChanges = async () => {
+    const changedUsers = users
+      .filter((user, index) => {
+        const originalUser = originalUsers[index]
+        return originalUser && user.Usr_Nac_Id !== originalUser.Usr_Nac_Id
+      })
+      .map((user) => ({
+        Usr_Id: user.Usr_Id || user.id,
+        Usr_Nac_Id: user.Usr_Nac_Id,
+      }))
+
+    if (changedUsers.length === 0) {
       setAlert({
         visible: true,
-        message: 'Permissões atualizadas com sucesso!',
-        color: 'success',
+        message: 'Nenhuma alteração foi feita.',
+        color: 'info',
       })
-      setTimeout(() => setAlert({ ...alert, visible: false }), 3000)
-    }, 500)
+      return
+    }
+
+    try {
+      const response = await axios.put('http://localhost:5000/api/tb_usuario/update-permissions', {
+        users: changedUsers,
+      })
+
+      console.log('Resposta do servidor:', response.data)
+
+      if (response.data.partialSuccess) {
+        // Algumas atualizações falharam
+        setAlert({
+          visible: true,
+          message: `Atualizado com sucesso para ${response.data.successCount} usuários, ${response.data.failedCount} falhas.`,
+          color: 'warning',
+        })
+      } else {
+        // Tudo ok
+        setAlert({
+          visible: true,
+          message: response.data.message,
+          color: 'success',
+        })
+        // Atualiza os dados originais
+        setOriginalUsers([...users])
+      }
+    } catch (error) {
+      console.log(error)
+      console.log(changedUsers)
+      setAlert({
+        visible: true,
+        message: 'Erro ao atualizar permissões',
+        color: 'danger',
+      })
+    }
   }
 
   if (loading) {
