@@ -20,10 +20,10 @@ const AppContent = () => {
                   exact={route.exact}
                   name={route.name}
                   element={
-                    route.path === '/' ? (
-                      <PrivateRoute>
-                        <route.element />
-                      </PrivateRoute>
+                    route.path === '/login' ||
+                    route.path === '/cadastro' ||
+                    route.path === '/404' ? (
+                      <route.element />
                     ) : (
                       <route.element />
                     )

@@ -30,7 +30,6 @@ export const AuthProvider = ({ children }) => {
     axios
       .get(`http://localhost:5000/api/tb_usuario/${cpf}`)
       .then((response) => {
-        console.log(response.data)
         setUserNac(response.data.Usr_Nac_Id)
       })
       .catch((error) => {

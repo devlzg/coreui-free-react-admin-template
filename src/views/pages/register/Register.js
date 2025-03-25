@@ -1,4 +1,4 @@
-import { cilLockLocked, cilScreenSmartphone, cilUser } from '@coreui/icons'
+import { cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
 import {
   CButton,
@@ -17,7 +17,6 @@ import {
   CRow,
 } from '@coreui/react'
 import React, { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../../contexts/AuthContext'
 
 const formatCPF = (value) => {
