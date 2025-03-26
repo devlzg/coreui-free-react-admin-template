@@ -292,7 +292,8 @@ const EmpresaEspelho = () => {
                         <CTableDataCell>{empresa.Emp_Cidade}</CTableDataCell>
                         <CTableDataCell>
                           <span
-                            className={`badge bg-${empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'}`}
+                            className={`badge bg-${empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'} text-nowrap d-inline-block`}
+                            style={{ width: '150px' }} // Defina um valor que acomode ambos os textos
                           >
                             {empresa.Emp_Status}
                           </span>
