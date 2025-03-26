@@ -8,7 +8,7 @@ const routes = [
   { path: '/', exact: true, name: 'Home' },
   { path: '/dashboard', name: 'Dashboard', element: Dashboard },
   { path: '/alterar-permissoes', name: 'Alterar Permissões', element: AlterarPermissoes },
-  { path: '/empresa-espelho', name: 'Empresa Espelho', element: EmpresaEspelho },
+  { path: '/empresa/espelho', name: 'Empresa Espelho', element: EmpresaEspelho },
 ]
 
 export default routes

@@ -1,6 +1,6 @@
 import { cilBuilding, cilSpeedometer, cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { CNavItem } from '@coreui/react'
+import { CNavGroup, CNavItem } from '@coreui/react'
 import React from 'react'
 
 const _nav = [
@@ -12,11 +12,18 @@ const _nav = [
     icon: <CIcon icon={cilSpeedometer} customClassName="nav-icon" />,
   },
   {
-    component: CNavItem,
+    component: CNavGroup,
     requiredaccesslevel: 1,
-    name: 'Empresa/Espelho',
-    to: '/empresa-espelho',
+    name: 'Empresa',
+    to: '/empresa/espelho',
     icon: <CIcon icon={cilBuilding} customClassName="nav-icon" />,
+    items: [
+      {
+        component: CNavItem,
+        name: 'Espelho',
+        to: '/empresa/espelho',
+      },
+    ],
   },
   {
     component: CNavItem,

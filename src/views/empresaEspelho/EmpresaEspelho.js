@@ -19,13 +19,15 @@ import {
   CTableRow,
 } from '@coreui/react'
 import React, { useEffect, useState } from 'react'
+import { useAuth } from '../../contexts/AuthContext'
 
-const TabelaEmpresas = () => {
+const EmpresaEspelho = () => {
   const [originalEmpresas, setOriginalEmpresas] = useState([])
   const [empresas, setEmpresas] = useState([])
   const [filteredEmpresas, setFilteredEmpresas] = useState([])
   const [alert, setAlert] = useState({ visible: false, message: '', color: '' })
   const [loading, setLoading] = useState(true)
+  const { getAllEmpresas } = useAuth()
 
   // Estados para os filtros
   const [searchTerm, setSearchTerm] = useState('')
@@ -35,57 +37,9 @@ const TabelaEmpresas = () => {
   const [cnpjFilter, setCnpjFilter] = useState('')
 
   useEffect(() => {
-    // Função para simular dados - substitua por chamada API real
     const fetchEmpresas = async () => {
       try {
-        // Dados simulados baseados na imagem fornecida
-        const empresasData = [
-          {
-            id: 0,
-            nomeFantasia: 'GULMERONE DA COSTA INTERESE SAFEASTINAR',
-            cnpj: '28.334.673/0001-60',
-            contrato: '463562036',
-            dataCadastro: '10/03/2025',
-            cidade: 'Brasília',
-            status: 'Exportado',
-          },
-          {
-            id: 1,
-            nomeFantasia: 'SEJASLA 3.1 BOGEERO CARMO CARVALHO',
-            cnpj: '53.064.315/0012-17',
-            contrato: '482545096',
-            dataCadastro: '06/03/2025',
-            cidade: 'Uberaba',
-            status: 'Cadastro Incompleto',
-          },
-          {
-            id: 2,
-            nomeFantasia: 'SA 377.383 EFIAS Correia Calta',
-            cnpj: '36.377.383/0003-94',
-            contrato: '482545096',
-            dataCadastro: '06/03/2025',
-            cidade: 'Brasília',
-            status: 'Cadastro Incompleto',
-          },
-          {
-            id: 3,
-            nomeFantasia: 'REAL SERVICOS DE MARKETING E PUBLICIDADE LTDA',
-            cnpj: '24.687.869/0021-77',
-            contrato: '482545096',
-            dataCadastro: '27/03/2025',
-            cidade: 'Brasília',
-            status: 'Exportado',
-          },
-          {
-            id: 4,
-            nomeFantasia: 'NGL - SERVICOS CONDOMINIAIS E DE PROPACIO EM TILIMITADA',
-            cnpj: '12.323.839/0001-00',
-            contrato: '463562036',
-            dataCadastro: '26/03/2025',
-            cidade: 'Brasília',
-            status: 'Exportado',
-          },
-        ]
+        const empresasData = await getAllEmpresas()
 
         setOriginalEmpresas([...empresasData])
         setEmpresas(empresasData)
@@ -103,6 +57,7 @@ const TabelaEmpresas = () => {
     }
 
     fetchEmpresas()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   // Função para converter data no formato DD/MM/YYYY para Date object
@@ -119,18 +74,18 @@ const TabelaEmpresas = () => {
     // Filtro por nome da empresa
     if (searchTerm) {
       const term = searchTerm.toLowerCase()
-      result = result.filter((empresa) => empresa.nomeFantasia?.toLowerCase().includes(term))
+      result = result.filter((empresa) => empresa.Emp_NomeFant?.toLowerCase().includes(term))
     }
 
     // Filtro por status
     if (statusFilter !== 'all') {
-      result = result.filter((empresa) => empresa.status === statusFilter)
+      result = result.filter((empresa) => empresa.Emp_Status === statusFilter)
     }
 
     // Filtro por CNPJ
     if (cnpjFilter) {
       const term = cnpjFilter.replace(/\D/g, '') // Remove formatação para busca
-      result = result.filter((empresa) => empresa.cnpj?.replace(/\D/g, '').includes(term))
+      result = result.filter((empresa) => empresa.Emp_Cnpj?.replace(/\D/g, '').includes(term))
     }
 
     // Filtro por período de datas
@@ -139,7 +94,7 @@ const TabelaEmpresas = () => {
       const end = endDate ? new Date(endDate) : null
 
       result = result.filter((empresa) => {
-        const empresaDate = parseDate(empresa.dataCadastro)
+        const empresaDate = parseDate(empresa.Emp_Dt_Cadastro)
         if (!empresaDate) return false
 
         // Verifica se a data está dentro do período
@@ -268,20 +223,20 @@ const TabelaEmpresas = () => {
                   </CTableHead>
                   <CTableBody>
                     {filteredEmpresas.map((empresa) => (
-                      <CTableRow key={empresa.id}>
-                        <CTableDataCell>{empresa.id}</CTableDataCell>
+                      <CTableRow key={empresa.Emp_Id}>
+                        <CTableDataCell>{empresa.Emp_Id}</CTableDataCell>
                         <CTableDataCell className="text-nowrap">
-                          {empresa.nomeFantasia}
+                          {empresa.Emp_NomeFant}
                         </CTableDataCell>
-                        <CTableDataCell>{empresa.cnpj}</CTableDataCell>
-                        <CTableDataCell>{empresa.contrato}</CTableDataCell>
-                        <CTableDataCell>{empresa.dataCadastro}</CTableDataCell>
-                        <CTableDataCell>{empresa.cidade}</CTableDataCell>
+                        <CTableDataCell>{empresa.Emp_Cnpj}</CTableDataCell>
+                        <CTableDataCell>{empresa.Emp_Contrato}</CTableDataCell>
+                        <CTableDataCell>{empresa.Emp_Dt_Cadastro}</CTableDataCell>
+                        <CTableDataCell>{empresa.Emp_Cidade}</CTableDataCell>
                         <CTableDataCell>
                           <span
-                            className={`badge bg-${empresa.status === 'Exportado' ? 'success' : 'warning'}`}
+                            className={`badge bg-${empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'}`}
                           >
-                            {empresa.status}
+                            {empresa.Emp_Status}
                           </span>
                         </CTableDataCell>
                       </CTableRow>
@@ -306,4 +261,4 @@ const TabelaEmpresas = () => {
   )
 }
 
-export default TabelaEmpresas
+export default EmpresaEspelho
