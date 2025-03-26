@@ -23,6 +23,10 @@ export const AuthProvider = ({ children }) => {
     setStoredCpf(userCpf)
   }, [userCpf])
   useEffect(() => {
+    getUsrNacIdByCpf(userCpf)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+  useEffect(() => {
     setStoredNac(userNac)
   }, [userNac])
 

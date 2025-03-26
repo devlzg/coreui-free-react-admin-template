@@ -4,8 +4,15 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
+  CCol,
   CContainer,
+  CDropdown,
+  CDropdownItem,
+  CDropdownMenu,
+  CDropdownToggle,
+  CFormInput,
   CFormSelect,
+  CRow,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -13,16 +20,22 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
+import axios from 'axios'
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
-import axios from 'axios'
 
 const AlterarPermissoes = () => {
   const { getAllUsers } = useAuth()
-  const [originalUsers, setOriginalUsers] = useState([]) // Armazena os dados originais
-  const [users, setUsers] = useState([]) // Armazena os dados modificados
+  const [originalUsers, setOriginalUsers] = useState([])
+  const [users, setUsers] = useState([])
+  const [filteredUsers, setFilteredUsers] = useState([])
   const [alert, setAlert] = useState({ visible: false, message: '', color: '' })
   const [loading, setLoading] = useState(true)
+
+  // Estados para os filtros
+  const [searchTerm, setSearchTerm] = useState('')
+  const [accessLevelFilter, setAccessLevelFilter] = useState('all')
+  const [sortOption, setSortOption] = useState('alphabetical')
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -35,8 +48,9 @@ const AlterarPermissoes = () => {
         }
 
         const formattedUsers = Array.isArray(usersData) ? usersData : []
-        setOriginalUsers([...formattedUsers]) // Guarda cópia dos dados originais
+        setOriginalUsers([...formattedUsers])
         setUsers(formattedUsers)
+        setFilteredUsers(formattedUsers)
         setLoading(false)
       } catch (error) {
         console.error('Erro ao carregar usuários:', error)
@@ -48,11 +62,54 @@ const AlterarPermissoes = () => {
         setLoading(false)
         setOriginalUsers([])
         setUsers([])
+        setFilteredUsers([])
       }
     }
 
     fetchUsers()
   }, [getAllUsers])
+
+  // Efeito para aplicar filtros e ordenação
+  useEffect(() => {
+    let result = [...users]
+
+    // Aplicar filtro de busca
+    if (searchTerm) {
+      const term = searchTerm.toLowerCase()
+      result = result.filter(
+        (user) =>
+          user.Usr_Nome?.toLowerCase().includes(term) ||
+          user.nome?.toLowerCase().includes(term) ||
+          user.name?.toLowerCase().includes(term) ||
+          user.Usr_Email?.toLowerCase().includes(term) ||
+          user.email?.toLowerCase().includes(term),
+      )
+    }
+
+    // Aplicar filtro de nível de acesso
+    if (accessLevelFilter !== 'all') {
+      result = result.filter(
+        (user) => String(user.Usr_Nac_Id || user.nivelAcesso || '1') === accessLevelFilter,
+      )
+    }
+
+    // Aplicar ordenação
+    if (sortOption === 'alphabetical') {
+      result.sort((a, b) => {
+        const nameA = (a.Usr_Nome || a.nome || a.name || '').toLowerCase()
+        const nameB = (b.Usr_Nome || b.nome || b.name || '').toLowerCase()
+        return nameA.localeCompare(nameB)
+      })
+    } else if (sortOption === 'accessLevel') {
+      result.sort((a, b) => {
+        const levelA = parseInt(a.Usr_Nac_Id || a.nivelAcesso || '1')
+        const levelB = parseInt(b.Usr_Nac_Id || b.nivelAcesso || '1')
+        return levelB - levelA
+      })
+    }
+
+    setFilteredUsers(result)
+  }, [searchTerm, accessLevelFilter, sortOption, users])
 
   const Usr_Nac_IdOptions = [
     { value: '1', label: 'Usuário' },
@@ -61,26 +118,11 @@ const AlterarPermissoes = () => {
   ]
 
   const handleUsr_Nac_IdChange = (Usr_Id, newUsr_Nac_Id) => {
-    setUsers(
-      users.map((user) => (user.Usr_Id === Usr_Id ? { ...user, Usr_Nac_Id: newUsr_Nac_Id } : user)),
+    const updatedUsers = users.map((user) =>
+      user.Usr_Id === Usr_Id ? { ...user, Usr_Nac_Id: newUsr_Nac_Id } : user,
     )
+    setUsers(updatedUsers)
   }
-
-  // const updateUsersPermissions = async (changedUsers) => {
-  //   try {
-  //     const response = await axios.put('/api/tb_usuario/update-permissions', {
-  //       users: changedUsers,
-  //     })
-  //     console.log('Resposta do servidor:', response.data)
-  //   } catch (error) {
-  //     console.error('Erro ao atualizar permissões:', error)
-  //     setAlert({
-  //       visible: true,
-  //       message: 'Erro ao atualizar permissões. Tente novamente.',
-  //       color: 'danger',
-  //     })
-  //   }
-  // }
 
   const handleSaveChanges = async () => {
     const changedUsers = users
@@ -110,20 +152,17 @@ const AlterarPermissoes = () => {
       console.log('Resposta do servidor:', response.data)
 
       if (response.data.partialSuccess) {
-        // Algumas atualizações falharam
         setAlert({
           visible: true,
           message: `Atualizado com sucesso para ${response.data.successCount} usuários, ${response.data.failedCount} falhas.`,
           color: 'warning',
         })
       } else {
-        // Tudo ok
         setAlert({
           visible: true,
           message: response.data.message,
           color: 'success',
         })
-        // Atualiza os dados originais
         setOriginalUsers([...users])
       }
     } catch (error) {
@@ -160,8 +199,47 @@ const AlterarPermissoes = () => {
         </CCardHeader>
 
         <CCardBody>
-          {users.length === 0 ? (
-            <CAlert color="info">Nenhum usuário encontrado</CAlert>
+          {/* Filtros */}
+          <CRow className="mb-3">
+            <CCol md={6}>
+              <CFormInput
+                type="text"
+                placeholder="Pesquisar por nome ou e-mail..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </CCol>
+            <CCol md={3}>
+              <CFormSelect
+                value={accessLevelFilter}
+                onChange={(e) => setAccessLevelFilter(e.target.value)}
+              >
+                <option value="all">Todos os níveis</option>
+                <option value="1">Usuário</option>
+                <option value="2">Administrador</option>
+                <option value="3">Super Usuário</option>
+              </CFormSelect>
+            </CCol>
+            <CCol md={3}>
+              <CDropdown>
+                <CDropdownToggle color="secondary">
+                  Ordenar por:{' '}
+                  {sortOption === 'alphabetical' ? 'Ordem Alfabética' : 'Nível de Acesso'}
+                </CDropdownToggle>
+                <CDropdownMenu>
+                  <CDropdownItem onClick={() => setSortOption('alphabetical')}>
+                    Ordem Alfabética
+                  </CDropdownItem>
+                  <CDropdownItem onClick={() => setSortOption('accessLevel')}>
+                    Nível de Acesso
+                  </CDropdownItem>
+                </CDropdownMenu>
+              </CDropdown>
+            </CCol>
+          </CRow>
+
+          {filteredUsers.length === 0 ? (
+            <CAlert color="info">Nenhum usuário encontrado com os filtros aplicados</CAlert>
           ) : (
             <>
               <CTable hover responsive>
@@ -173,7 +251,7 @@ const AlterarPermissoes = () => {
                   </CTableRow>
                 </CTableHead>
                 <CTableBody>
-                  {users.map((user) => (
+                  {filteredUsers.map((user) => (
                     <CTableRow key={user.Usr_Id || user.id || user.cpf}>
                       <CTableDataCell>{user.Usr_Nome || user.nome || user.name}</CTableDataCell>
                       <CTableDataCell>{user.Usr_Email || user.email}</CTableDataCell>
