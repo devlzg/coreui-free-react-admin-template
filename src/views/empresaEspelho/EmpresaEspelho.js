@@ -10,6 +10,8 @@ import {
   CFormSelect,
   CInputGroup,
   CInputGroupText,
+  CPagination,
+  CPaginationItem,
   CRow,
   CTable,
   CTableBody,
@@ -35,6 +37,11 @@ const EmpresaEspelho = () => {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [cnpjFilter, setCnpjFilter] = useState('')
+
+  // Estados para paginação
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
 
   useEffect(() => {
     const fetchEmpresas = async () => {
@@ -106,7 +113,35 @@ const EmpresaEspelho = () => {
     }
 
     setFilteredEmpresas(result)
+    setCurrentPage(1) // Resetar para a primeira página quando os filtros mudam
   }, [searchTerm, statusFilter, startDate, endDate, cnpjFilter, empresas])
+
+  // Efeito para calcular o total de páginas quando filteredEmpresas muda
+  useEffect(() => {
+    const total = Math.ceil(filteredEmpresas.length / itemsPerPage)
+    setTotalPages(total > 0 ? total : 1)
+
+    // Ajustar currentPage se necessário
+    if (currentPage > total && total > 0) {
+      setCurrentPage(total)
+    }
+  }, [filteredEmpresas, itemsPerPage, currentPage])
+
+  // Obter empresas da página atual
+  const getCurrentPageEmpresas = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredEmpresas.slice(startIndex, endIndex)
+  }
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value))
+    setCurrentPage(1) // Resetar para a primeira página quando muda o número de itens por página
+  }
 
   const statusOptions = [
     { value: 'all', label: 'Todos os status' },
@@ -130,8 +165,7 @@ const EmpresaEspelho = () => {
     <CContainer>
       <CCard>
         <CCardHeader>
-          <h3>Monitor de Empresas</h3>
-          <small className="text-muted">Visualize e filtre as empresas cadastradas</small>
+          <h3>Espelho Empresas</h3>
         </CCardHeader>
 
         <CCardBody>
@@ -204,6 +238,30 @@ const EmpresaEspelho = () => {
             </CCol>
           </CRow>
 
+          {/* Controles de paginação - Topo */}
+          <CRow className="mb-3 align-items-center">
+            <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
+              <CFormSelect
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                aria-label="Itens por página"
+              >
+                <option value={5}>5 itens por página</option>
+                <option value={10}>10 itens por página</option>
+                <option value={20}>20 itens por página</option>
+                <option value={50}>50 itens por página</option>
+                <option value={100}>100 itens por página</option>
+              </CFormSelect>
+            </CCol>
+            <CCol xs={12} sm={6} md={8} lg={9} xl={10} className="text-sm-end mt-2 mt-sm-0">
+              <span className="me-2">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+                {Math.min(currentPage * itemsPerPage, filteredEmpresas.length)} de{' '}
+                {filteredEmpresas.length} empresas
+              </span>
+            </CCol>
+          </CRow>
+
           {filteredEmpresas.length === 0 ? (
             <CAlert color="info">Nenhuma empresa encontrada com os filtros aplicados</CAlert>
           ) : (
@@ -222,7 +280,7 @@ const EmpresaEspelho = () => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {filteredEmpresas.map((empresa) => (
+                    {getCurrentPageEmpresas().map((empresa) => (
                       <CTableRow key={empresa.Emp_Id}>
                         <CTableDataCell>{empresa.Emp_Id}</CTableDataCell>
                         <CTableDataCell className="text-nowrap">
@@ -245,9 +303,38 @@ const EmpresaEspelho = () => {
                 </CTable>
               </div>
 
-              <div className="mt-3 text-muted">
-                Mostrando de 1 até {filteredEmpresas.length} de {empresas.length} registros
-              </div>
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-3">
+                  <CPagination aria-label="Page navigation">
+                    <CPaginationItem
+                      disabled={currentPage === 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      aria-label="Previous"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </CPaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <CPaginationItem
+                        key={page}
+                        active={page === currentPage}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </CPaginationItem>
+                    ))}
+
+                    <CPaginationItem
+                      disabled={currentPage === totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      aria-label="Next"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </CPaginationItem>
+                  </CPagination>
+                </div>
+              )}
             </>
           )}
           {alert.visible && (

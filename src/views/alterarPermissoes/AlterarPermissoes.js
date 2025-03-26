@@ -13,6 +13,8 @@ import {
   CFormInput,
   CFormSelect,
   CInputGroup,
+  CPagination,
+  CPaginationItem,
   CRow,
   CTable,
   CTableBody,
@@ -37,6 +39,11 @@ const AlterarPermissoes = () => {
   const [searchTerm, setSearchTerm] = useState('')
   const [accessLevelFilter, setAccessLevelFilter] = useState('all')
   const [sortOption, setSortOption] = useState('alphabetical')
+
+  // Estados para paginação
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalPages, setTotalPages] = useState(1)
 
   useEffect(() => {
     const fetchUsers = async () => {
@@ -110,7 +117,26 @@ const AlterarPermissoes = () => {
     }
 
     setFilteredUsers(result)
+    setCurrentPage(1) // Resetar para a primeira página quando os filtros mudam
   }, [searchTerm, accessLevelFilter, sortOption, users])
+
+  // Efeito para calcular o total de páginas quando filteredUsers muda
+  useEffect(() => {
+    const total = Math.ceil(filteredUsers.length / itemsPerPage)
+    setTotalPages(total > 0 ? total : 1)
+
+    // Ajustar currentPage se necessário
+    if (currentPage > total && total > 0) {
+      setCurrentPage(total)
+    }
+  }, [filteredUsers, itemsPerPage, currentPage])
+
+  // Obter usuários da página atual
+  const getCurrentPageUsers = () => {
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    return filteredUsers.slice(startIndex, endIndex)
+  }
 
   const Usr_Nac_IdOptions = [
     { value: '1', label: 'Usuário' },
@@ -177,6 +203,15 @@ const AlterarPermissoes = () => {
     }
   }
 
+  const handlePageChange = (page) => {
+    setCurrentPage(page)
+  }
+
+  const handleItemsPerPageChange = (e) => {
+    setItemsPerPage(Number(e.target.value))
+    setCurrentPage(1) // Resetar para a primeira página quando muda o número de itens por página
+  }
+
   if (loading) {
     return (
       <CContainer>
@@ -194,9 +229,6 @@ const AlterarPermissoes = () => {
       <CCard>
         <CCardHeader>
           <h3>Gerenciamento de Permissões de Usuários</h3>
-          <small className="text-muted">
-            Altere o nível de acesso de cada usuário conforme necessário
-          </small>
         </CCardHeader>
 
         <CCardBody>
@@ -220,7 +252,7 @@ const AlterarPermissoes = () => {
                 value={accessLevelFilter}
                 onChange={(e) => setAccessLevelFilter(e.target.value)}
                 aria-label="Filtrar por nível de acesso"
-                className="text-truncate" // Adicionado para garantir que o texto não quebre
+                className="text-truncate"
               >
                 <option value="all">Todos os níveis</option>
                 <option value="1">Usuário</option>
@@ -232,10 +264,7 @@ const AlterarPermissoes = () => {
             {/* Dropdown de ordenação - Metade da largura em mobile, terço em desktop */}
             <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CDropdown className="w-100 d-flex">
-                <CDropdownToggle
-                  color="secondary"
-                  className="w-100 text-truncate text-start" // Adicionado text-truncate
-                >
+                <CDropdownToggle color="secondary" className="w-100 text-truncate text-start">
                   {sortOption === 'alphabetical' ? 'Ordem Alfabética' : 'Nível de Acesso'}
                 </CDropdownToggle>
                 <CDropdownMenu className="w-100">
@@ -247,6 +276,30 @@ const AlterarPermissoes = () => {
                   </CDropdownItem>
                 </CDropdownMenu>
               </CDropdown>
+            </CCol>
+          </CRow>
+
+          {/* Controles de paginação - Topo */}
+          <CRow className="mb-3 align-items-center">
+            <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
+              <CFormSelect
+                value={itemsPerPage}
+                onChange={handleItemsPerPageChange}
+                aria-label="Itens por página"
+              >
+                <option value={5}>5 itens por página</option>
+                <option value={10}>10 itens por página</option>
+                <option value={20}>20 itens por página</option>
+                <option value={50}>50 itens por página</option>
+                <option value={100}>100 itens por página</option>
+              </CFormSelect>
+            </CCol>
+            <CCol xs={12} sm={6} md={8} lg={9} xl={10} className="text-sm-end mt-2 mt-sm-0">
+              <span className="me-2">
+                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+                {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de{' '}
+                {filteredUsers.length} usuários
+              </span>
             </CCol>
           </CRow>
 
@@ -266,22 +319,22 @@ const AlterarPermissoes = () => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {filteredUsers.map((user) => (
+                    {getCurrentPageUsers().map((user) => (
                       <CTableRow key={user.Usr_Id || user.id || user.cpf}>
-                        <CTableDataCell className="text-nowrap">
+                        <CTableDataCell className="text-nowrap table-cell-align">
                           {user.Usr_Nome || user.nome || user.name}
                         </CTableDataCell>
-                        <CTableDataCell className="text-nowrap">
+                        <CTableDataCell className="text-nowrap table-cell-align">
                           {user.Usr_Email || user.email}
                         </CTableDataCell>
-                        <CTableDataCell>
+                        <CTableDataCell className="table-cell-align">
                           <CFormSelect
                             value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
                             onChange={(e) =>
                               handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
                             }
                             aria-label="Selecionar permissão"
-                            className="text-truncate min-width-150" // Classes adicionadas
+                            className="text-truncate min-width-150"
                           >
                             {Usr_Nac_IdOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -295,6 +348,40 @@ const AlterarPermissoes = () => {
                   </CTableBody>
                 </CTable>
               </div>
+
+              {/* Paginação */}
+              {totalPages > 1 && (
+                <div className="d-flex justify-content-center mt-3">
+                  <CPagination aria-label="Page navigation">
+                    <CPaginationItem
+                      disabled={currentPage === 1}
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      aria-label="Previous"
+                    >
+                      <span aria-hidden="true">&laquo;</span>
+                    </CPaginationItem>
+
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <CPaginationItem
+                        key={page}
+                        active={page === currentPage}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </CPaginationItem>
+                    ))}
+
+                    <CPaginationItem
+                      disabled={currentPage === totalPages}
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      aria-label="Next"
+                    >
+                      <span aria-hidden="true">&raquo;</span>
+                    </CPaginationItem>
+                  </CPagination>
+                </div>
+              )}
+
               <div className="text-right mt-3">
                 <CButton color="primary" onClick={handleSaveChanges} className="px-4">
                   Salvar Alterações
@@ -325,12 +412,15 @@ const AlterarPermissoes = () => {
             overflow-x: auto;
             -webkit-overflow-scrolling: touch;
           }
+          .table-cell-align {
+            vertical-align: middle !important;
+          }
           @media (max-width: 576px) {
             .min-width-150 {
               min-width: 120px !important;
             }
           }
-        `}
+  `}
       </style>
     </CContainer>
   )
