@@ -1,9 +1,13 @@
 import { cilBuilding, cilSpeedometer, cilUser } from '@coreui/icons'
 import CIcon from '@coreui/icons-react'
-import { CNavGroup, CNavItem } from '@coreui/react'
+import { CNavGroup, CNavItem, CNavTitle } from '@coreui/react'
 import React from 'react'
 
 const _nav = [
+  {
+    component: CNavTitle,
+    name: 'Menu',
+  },
   {
     component: CNavItem,
     requiredaccesslevel: 1,

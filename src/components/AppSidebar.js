@@ -26,7 +26,7 @@ const AppSidebar = () => {
       }}
     >
       <CSidebarHeader className="border-bottom">
-        Página de Administração
+        Vendas Online - Adm
         <CCloseButton
           className="d-lg-none"
           dark
