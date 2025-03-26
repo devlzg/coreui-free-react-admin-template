@@ -14,7 +14,7 @@ import {
   CTableRow,
 } from '@coreui/react'
 import React, { useEffect, useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
+import { useAuth } from '../../contexts/AuthContext'
 import axios from 'axios'
 
 const AlterarPermissoes = () => {
