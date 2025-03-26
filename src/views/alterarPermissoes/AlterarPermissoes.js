@@ -12,6 +12,7 @@ import {
   CDropdownToggle,
   CFormInput,
   CFormSelect,
+  CInputGroup,
   CRow,
   CTable,
   CTableBody,
@@ -199,20 +200,27 @@ const AlterarPermissoes = () => {
         </CCardHeader>
 
         <CCardBody>
-          {/* Filtros */}
-          <CRow className="mb-3">
-            <CCol md={6}>
-              <CFormInput
-                type="text"
-                placeholder="Pesquisar por nome ou e-mail..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
+          {/* Filtros - Versão responsiva */}
+          <CRow className="mb-3 g-3">
+            {/* Barra de pesquisa - Ocupa toda a largura em mobile */}
+            <CCol xs={12} sm={12} md={6} lg={6} xl={6}>
+              <CInputGroup>
+                <CFormInput
+                  type="text"
+                  placeholder="Pesquisar por nome ou e-mail..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+              </CInputGroup>
             </CCol>
-            <CCol md={3}>
+
+            {/* Filtro de nível de acesso - Metade da largura em mobile, terço em desktop */}
+            <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CFormSelect
                 value={accessLevelFilter}
                 onChange={(e) => setAccessLevelFilter(e.target.value)}
+                aria-label="Filtrar por nível de acesso"
+                className="text-truncate" // Adicionado para garantir que o texto não quebre
               >
                 <option value="all">Todos os níveis</option>
                 <option value="1">Usuário</option>
@@ -220,13 +228,17 @@ const AlterarPermissoes = () => {
                 <option value="3">Super Usuário</option>
               </CFormSelect>
             </CCol>
-            <CCol md={3}>
-              <CDropdown>
-                <CDropdownToggle color="secondary">
-                  Ordenar por:{' '}
+
+            {/* Dropdown de ordenação - Metade da largura em mobile, terço em desktop */}
+            <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
+              <CDropdown className="w-100 d-flex">
+                <CDropdownToggle
+                  color="secondary"
+                  className="w-100 text-truncate text-start" // Adicionado text-truncate
+                >
                   {sortOption === 'alphabetical' ? 'Ordem Alfabética' : 'Nível de Acesso'}
                 </CDropdownToggle>
-                <CDropdownMenu>
+                <CDropdownMenu className="w-100">
                   <CDropdownItem onClick={() => setSortOption('alphabetical')}>
                     Ordem Alfabética
                   </CDropdownItem>
@@ -242,38 +254,47 @@ const AlterarPermissoes = () => {
             <CAlert color="info">Nenhum usuário encontrado com os filtros aplicados</CAlert>
           ) : (
             <>
-              <CTable hover responsive>
-                <CTableHead>
-                  <CTableRow>
-                    <CTableHeaderCell scope="col">Nome</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">E-mail</CTableHeaderCell>
-                    <CTableHeaderCell scope="col">Nível de acesso</CTableHeaderCell>
-                  </CTableRow>
-                </CTableHead>
-                <CTableBody>
-                  {filteredUsers.map((user) => (
-                    <CTableRow key={user.Usr_Id || user.id || user.cpf}>
-                      <CTableDataCell>{user.Usr_Nome || user.nome || user.name}</CTableDataCell>
-                      <CTableDataCell>{user.Usr_Email || user.email}</CTableDataCell>
-                      <CTableDataCell>
-                        <CFormSelect
-                          value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
-                          onChange={(e) =>
-                            handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
-                          }
-                          aria-label="Selecionar permissão"
-                        >
-                          {Usr_Nac_IdOptions.map((option) => (
-                            <option key={option.value} value={option.value}>
-                              {option.label}
-                            </option>
-                          ))}
-                        </CFormSelect>
-                      </CTableDataCell>
+              <div className="table-responsive">
+                <CTable hover responsive>
+                  <CTableHead>
+                    <CTableRow>
+                      <CTableHeaderCell scope="col">Nome</CTableHeaderCell>
+                      <CTableHeaderCell scope="col">E-mail</CTableHeaderCell>
+                      <CTableHeaderCell scope="col" className="min-width-150">
+                        Nível de acesso
+                      </CTableHeaderCell>
                     </CTableRow>
-                  ))}
-                </CTableBody>
-              </CTable>
+                  </CTableHead>
+                  <CTableBody>
+                    {filteredUsers.map((user) => (
+                      <CTableRow key={user.Usr_Id || user.id || user.cpf}>
+                        <CTableDataCell className="text-nowrap">
+                          {user.Usr_Nome || user.nome || user.name}
+                        </CTableDataCell>
+                        <CTableDataCell className="text-nowrap">
+                          {user.Usr_Email || user.email}
+                        </CTableDataCell>
+                        <CTableDataCell>
+                          <CFormSelect
+                            value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
+                            onChange={(e) =>
+                              handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
+                            }
+                            aria-label="Selecionar permissão"
+                            className="text-truncate min-width-150" // Classes adicionadas
+                          >
+                            {Usr_Nac_IdOptions.map((option) => (
+                              <option key={option.value} value={option.value}>
+                                {option.label}
+                              </option>
+                            ))}
+                          </CFormSelect>
+                        </CTableDataCell>
+                      </CTableRow>
+                    ))}
+                  </CTableBody>
+                </CTable>
+              </div>
               <div className="text-right mt-3">
                 <CButton color="primary" onClick={handleSaveChanges} className="px-4">
                   Salvar Alterações
@@ -288,6 +309,29 @@ const AlterarPermissoes = () => {
           )}
         </CCardBody>
       </CCard>
+
+      {/* Adicionando estilos CSS para garantir a exibição correta */}
+      <style>
+        {`
+          .min-width-150 {
+            min-width: 150px !important;
+          }
+          .text-truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+          .table-responsive {
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+          @media (max-width: 576px) {
+            .min-width-150 {
+              min-width: 120px !important;
+            }
+          }
+        `}
+      </style>
     </CContainer>
   )
 }
