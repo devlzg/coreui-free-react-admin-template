@@ -1,5 +1,6 @@
 import {
   CAlert,
+  CBadge,
   CButton,
   CCard,
   CCardBody,
@@ -13,6 +14,7 @@ import {
   CPagination,
   CPaginationItem,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -20,127 +22,104 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
-import React, { useEffect, useState } from 'react'
+import axios from 'axios'
+import React, { useEffect, useRef, useState } from 'react'
 import { useAuth } from '../../contexts/AuthContext'
 
 const EmpresaEspelho = () => {
-  const [originalEmpresas, setOriginalEmpresas] = useState([])
-  const [empresas, setEmpresas] = useState([])
-  const [filteredEmpresas, setFilteredEmpresas] = useState([])
-  const [alert, setAlert] = useState({ visible: false, message: '', color: '' })
-  const [loading, setLoading] = useState(true)
   const { getAllEmpresas } = useAuth()
+  const [empresas, setEmpresas] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+  const abortController = useRef(null)
 
   // Estados para os filtros
-  const [searchTerm, setSearchTerm] = useState('')
-  const [statusFilter, setStatusFilter] = useState('all')
-  const [startDate, setStartDate] = useState('')
-  const [endDate, setEndDate] = useState('')
-  const [cnpjFilter, setCnpjFilter] = useState('')
+  const [filters, setFilters] = useState({
+    search: '',
+    cnpj: '',
+    status: 'all',
+    startDate: '',
+    endDate: '',
+    page: 1,
+    limit: 10,
+  })
 
   // Estados para paginação
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
-  useEffect(() => {
-    const fetchEmpresas = async () => {
-      try {
-        const empresasData = await getAllEmpresas()
-
-        setOriginalEmpresas([...empresasData])
-        setEmpresas(empresasData)
-        setFilteredEmpresas(empresasData)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao carregar empresas:', error)
-        setAlert({
-          visible: true,
-          message: 'Erro ao carregar empresas. Tente novamente mais tarde.',
-          color: 'danger',
-        })
-        setLoading(false)
-      }
+  // Buscar empresas com filtros
+  const fetchEmpresas = async () => {
+    if (abortController.current) {
+      abortController.current.abort()
     }
 
-    fetchEmpresas()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+    abortController.current = new AbortController()
 
-  // Função para converter data no formato DD/MM/YYYY para Date object
-  const parseDate = (dateString) => {
-    if (!dateString) return null
-    const [day, month, year] = dateString.split('/')
-    return new Date(`${year}-${month}-${day}`)
+    setLoading(true)
+    setError(null)
+
+    try {
+      const response = await axios.get('http://localhost:5000/api/empresas', {
+        params: filters,
+        signal: abortController.current.signal,
+      })
+
+      // Verificação mais robusta da estrutura de resposta
+      const responseData = response.data || {}
+      const empresasData = Array.isArray(responseData.data) ? responseData.data : []
+      const total = typeof responseData.total === 'number' ? responseData.total : 0
+      const totalPages = typeof responseData.totalPages === 'number' ? responseData.totalPages : 1
+
+      setEmpresas(empresasData)
+      setTotalItems(total)
+      setTotalPages(totalPages)
+    } catch (err) {
+      if (!axios.isCancel(err)) {
+        console.error('Erro ao buscar empresas:', {
+          error: err,
+          response: err.response,
+        })
+        setError({
+          message: 'Erro ao carregar empresas',
+          details: err.response?.data?.message || err.message,
+        })
+      }
+    } finally {
+      setLoading(false)
+    }
   }
 
-  // Efeito para aplicar filtros
+  // Atualizar busca quando filtros mudarem
   useEffect(() => {
-    let result = [...empresas]
+    const timer = setTimeout(() => {
+      fetchEmpresas()
+    }, 500) // Debounce de 500ms
 
-    // Filtro por nome da empresa
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      result = result.filter((empresa) => empresa.Emp_NomeFant?.toLowerCase().includes(term))
+    return () => {
+      clearTimeout(timer)
+      if (abortController.current) {
+        abortController.current.abort()
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [filters])
 
-    // Filtro por status
-    if (statusFilter !== 'all') {
-      result = result.filter((empresa) => empresa.Emp_Status === statusFilter)
-    }
-
-    // Filtro por CNPJ
-    if (cnpjFilter) {
-      const term = cnpjFilter.replace(/\D/g, '') // Remove formatação para busca
-      result = result.filter((empresa) => empresa.Emp_Cnpj?.replace(/\D/g, '').includes(term))
-    }
-
-    // Filtro por período de datas
-    if (startDate || endDate) {
-      const start = startDate ? new Date(startDate) : null
-      const end = endDate ? new Date(endDate) : null
-
-      result = result.filter((empresa) => {
-        const empresaDate = parseDate(empresa.Emp_Dt_Cadastro)
-        if (!empresaDate) return false
-
-        // Verifica se a data está dentro do período
-        const afterStart = !start || empresaDate >= start
-        const beforeEnd = !end || empresaDate <= end
-
-        return afterStart && beforeEnd
-      })
-    }
-
-    setFilteredEmpresas(result)
-    setCurrentPage(1) // Resetar para a primeira página quando os filtros mudam
-  }, [searchTerm, statusFilter, startDate, endDate, cnpjFilter, empresas])
-
-  // Efeito para calcular o total de páginas quando filteredEmpresas muda
-  useEffect(() => {
-    const total = Math.ceil(filteredEmpresas.length / itemsPerPage)
-    setTotalPages(total > 0 ? total : 1)
-
-    // Ajustar currentPage se necessário
-    if (currentPage > total && total > 0) {
-      setCurrentPage(total)
-    }
-  }, [filteredEmpresas, itemsPerPage, currentPage])
-
-  // Obter empresas da página atual
-  const getCurrentPageEmpresas = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredEmpresas.slice(startIndex, endIndex)
+  const handleFilterChange = (name, value) => {
+    setFilters((prev) => ({
+      ...prev,
+      [name]: value,
+      page: 1, // Resetar para a primeira página ao mudar filtros
+    }))
   }
 
   const handlePageChange = (page) => {
-    setCurrentPage(page)
+    setFilters((prev) => ({ ...prev, page }))
   }
 
   const handleItemsPerPageChange = (e) => {
-    setItemsPerPage(Number(e.target.value))
-    setCurrentPage(1) // Resetar para a primeira página quando muda o número de itens por página
+    const limit = Number(e.target.value)
+    setFilters((prev) => ({ ...prev, limit, page: 1 }))
   }
 
   const statusOptions = [
@@ -149,11 +128,12 @@ const EmpresaEspelho = () => {
     { value: 'Cadastro Incompleto', label: 'Cadastro Incompleto' },
   ]
 
-  if (loading) {
+  if (loading && empresas.length === 0) {
     return (
       <CContainer>
         <CCard>
           <CCardBody className="text-center">
+            <CSpinner />
             <div>Carregando empresas...</div>
           </CCardBody>
         </CCard>
@@ -177,9 +157,14 @@ const EmpresaEspelho = () => {
                 <CFormInput
                   type="text"
                   placeholder="Nome da empresa"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange('search', e.target.value)}
                 />
+                {loading && (
+                  <CInputGroupText>
+                    <CSpinner size="sm" />
+                  </CInputGroupText>
+                )}
               </CInputGroup>
             </CCol>
 
@@ -189,8 +174,8 @@ const EmpresaEspelho = () => {
                 <CFormInput
                   type="text"
                   placeholder="CNPJ da empresa"
-                  value={cnpjFilter}
-                  onChange={(e) => setCnpjFilter(e.target.value)}
+                  value={filters.cnpj}
+                  onChange={(e) => handleFilterChange('cnpj', e.target.value)}
                 />
               </CInputGroup>
             </CCol>
@@ -198,9 +183,9 @@ const EmpresaEspelho = () => {
             {/* Filtro por status */}
             <CCol xs={12} sm={6} md={2}>
               <CFormSelect
-                value={statusFilter}
-                onChange={(e) => setStatusFilter(e.target.value)}
-                aria-label="Filtrar por status"
+                value={filters.status}
+                onChange={(e) => handleFilterChange('status', e.target.value)}
+                disabled={loading}
               >
                 {statusOptions.map((option) => (
                   <option key={option.value} value={option.value}>
@@ -216,9 +201,9 @@ const EmpresaEspelho = () => {
                 <CInputGroupText>De</CInputGroupText>
                 <CFormInput
                   type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  aria-label="Data inicial"
+                  value={filters.startDate}
+                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
+                  disabled={loading}
                 />
               </CInputGroup>
             </CCol>
@@ -229,119 +214,149 @@ const EmpresaEspelho = () => {
                 <CInputGroupText>Até</CInputGroupText>
                 <CFormInput
                   type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  aria-label="Data final"
-                  min={startDate}
+                  value={filters.endDate}
+                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
+                  disabled={loading}
+                  min={filters.startDate}
                 />
               </CInputGroup>
             </CCol>
           </CRow>
 
-          {/* Controles de paginação - Topo */}
+          {/* Controles de paginação */}
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
-                value={itemsPerPage}
+                value={filters.limit}
                 onChange={handleItemsPerPageChange}
-                aria-label="Itens por página"
+                disabled={loading}
               >
-                <option value={5}>5 itens por página</option>
-                <option value={10}>10 itens por página</option>
-                <option value={20}>20 itens por página</option>
-                <option value={50}>50 itens por página</option>
-                <option value={100}>100 itens por página</option>
+                <option value={5}>5 itens</option>
+                <option value={10}>10 itens</option>
+                <option value={20}>20 itens</option>
+                <option value={50}>50 itens</option>
               </CFormSelect>
             </CCol>
             <CCol xs={12} sm={6} md={8} lg={9} xl={10} className="text-sm-end mt-2 mt-sm-0">
-              <span className="me-2">
-                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
-                {Math.min(currentPage * itemsPerPage, filteredEmpresas.length)} de{' '}
-                {filteredEmpresas.length} empresas
-              </span>
+              {!loading && (
+                <span className="me-2">
+                  Mostrando {(filters.page - 1) * filters.limit + 1} a{' '}
+                  {Math.min(filters.page * filters.limit, totalItems)} de {totalItems} empresas
+                </span>
+              )}
             </CCol>
           </CRow>
 
-          {filteredEmpresas.length === 0 ? (
-            <CAlert color="info">Nenhuma empresa encontrada com os filtros aplicados</CAlert>
-          ) : (
-            <>
-              <div className="table-responsive">
-                <CTable hover responsive>
-                  <CTableHead>
-                    <CTableRow>
-                      <CTableHeaderCell scope="col">ID</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Nome Fantasia</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">N° CNPJ</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Contrato(S4E)</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Data de Cadastro</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Cidade</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">Status</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {getCurrentPageEmpresas().map((empresa) => (
-                      <CTableRow key={empresa.Emp_Id}>
-                        <CTableDataCell>{empresa.Emp_Id}</CTableDataCell>
-                        <CTableDataCell className="text-nowrap">
-                          {empresa.Emp_NomeFant}
-                        </CTableDataCell>
-                        <CTableDataCell>{empresa.Emp_Cnpj}</CTableDataCell>
-                        <CTableDataCell>{empresa.Emp_Contrato}</CTableDataCell>
-                        <CTableDataCell>{empresa.Emp_Dt_Cadastro}</CTableDataCell>
-                        <CTableDataCell>{empresa.Emp_Cidade}</CTableDataCell>
-                        <CTableDataCell>
-                          <span
-                            className={`badge bg-${empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'} text-nowrap d-inline-block`}
-                            style={{ width: '150px' }} // Defina um valor que acomode ambos os textos
-                          >
-                            {empresa.Emp_Status}
-                          </span>
-                        </CTableDataCell>
-                      </CTableRow>
-                    ))}
-                  </CTableBody>
-                </CTable>
+          {/* Mensagens de erro */}
+          {error && (
+            <CAlert color="danger" className="mt-3">
+              <strong>{error.message}</strong>
+              {error.details && <div className="mt-2">{error.details}</div>}
+              <div className="mt-2">
+                <CButton color="primary" size="sm" onClick={fetchEmpresas}>
+                  Tentar novamente
+                </CButton>
               </div>
-
-              {/* Paginação */}
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-3">
-                  <CPagination aria-label="Page navigation">
-                    <CPaginationItem
-                      disabled={currentPage === 1}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                      aria-label="Previous"
-                    >
-                      <span aria-hidden="true">&laquo;</span>
-                    </CPaginationItem>
-
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <CPaginationItem
-                        key={page}
-                        active={page === currentPage}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </CPaginationItem>
-                    ))}
-
-                    <CPaginationItem
-                      disabled={currentPage === totalPages}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                      aria-label="Next"
-                    >
-                      <span aria-hidden="true">&raquo;</span>
-                    </CPaginationItem>
-                  </CPagination>
-                </div>
-              )}
-            </>
-          )}
-          {alert.visible && (
-            <CAlert color={alert.color} className="mt-3">
-              {alert.message}
             </CAlert>
+          )}
+
+          {/* Tabela */}
+          <div className="table-responsive">
+            <CTable hover responsive>
+              <CTableHead>
+                <CTableRow>
+                  <CTableHeaderCell>ID</CTableHeaderCell>
+                  <CTableHeaderCell>Nome Fantasia</CTableHeaderCell>
+                  <CTableHeaderCell>N° CNPJ</CTableHeaderCell>
+                  <CTableHeaderCell>Contrato(S4E)</CTableHeaderCell>
+                  <CTableHeaderCell>Data de Cadastro</CTableHeaderCell>
+                  <CTableHeaderCell>Cidade</CTableHeaderCell>
+                  <CTableHeaderCell>Status</CTableHeaderCell>
+                </CTableRow>
+              </CTableHead>
+              <CTableBody>
+                {loading && empresas.length === 0 ? (
+                  <CTableRow>
+                    <CTableDataCell colSpan={7} className="text-center">
+                      <CSpinner />
+                    </CTableDataCell>
+                  </CTableRow>
+                ) : empresas.length > 0 ? (
+                  empresas.map((empresa) => (
+                    <CTableRow key={empresa.Emp_Id}>
+                      <CTableDataCell>{empresa.Emp_Id}</CTableDataCell>
+                      <CTableDataCell className="text-nowrap">
+                        {empresa.Emp_NomeFant}
+                      </CTableDataCell>
+                      <CTableDataCell>{empresa.Emp_Cnpj}</CTableDataCell>
+                      <CTableDataCell>{empresa.Emp_Contrato}</CTableDataCell>
+                      <CTableDataCell>{empresa.Emp_Dt_Cadastro}</CTableDataCell>
+                      <CTableDataCell>{empresa.Emp_Cidade}</CTableDataCell>
+                      <CTableDataCell>
+                        <CBadge
+                          color={empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'}
+                          className="text-nowrap"
+                          style={{ width: '150px' }}
+                        >
+                          {empresa.Emp_Status}
+                        </CBadge>
+                      </CTableDataCell>
+                    </CTableRow>
+                  ))
+                ) : (
+                  <CTableRow>
+                    <CTableDataCell colSpan={7} className="text-center">
+                      Nenhuma empresa encontrada
+                    </CTableDataCell>
+                  </CTableRow>
+                )}
+              </CTableBody>
+            </CTable>
+          </div>
+
+          {/* Paginação */}
+          {totalPages > 1 && (
+            <div className="d-flex justify-content-center mt-3">
+              <CPagination>
+                <CPaginationItem
+                  disabled={filters.page === 1 || loading}
+                  onClick={() => handlePageChange(filters.page - 1)}
+                >
+                  &laquo;
+                </CPaginationItem>
+
+                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                  let pageNum
+                  if (totalPages <= 5) {
+                    pageNum = i + 1
+                  } else if (filters.page <= 3) {
+                    pageNum = i + 1
+                  } else if (filters.page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i
+                  } else {
+                    pageNum = filters.page - 2 + i
+                  }
+
+                  return (
+                    <CPaginationItem
+                      key={pageNum}
+                      active={pageNum === filters.page}
+                      onClick={() => handlePageChange(pageNum)}
+                      disabled={loading}
+                    >
+                      {pageNum}
+                    </CPaginationItem>
+                  )
+                })}
+
+                <CPaginationItem
+                  disabled={filters.page === totalPages || loading}
+                  onClick={() => handlePageChange(filters.page + 1)}
+                >
+                  &raquo;
+                </CPaginationItem>
+              </CPagination>
+            </div>
           )}
         </CCardBody>
       </CCard>
