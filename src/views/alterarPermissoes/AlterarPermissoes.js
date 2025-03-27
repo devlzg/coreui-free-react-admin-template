@@ -16,6 +16,7 @@ import {
   CPagination,
   CPaginationItem,
   CRow,
+  CSpinner,
   CTable,
   CTableBody,
   CTableDataCell,
@@ -24,18 +25,16 @@ import {
   CTableRow,
 } from '@coreui/react'
 import axios from 'axios'
-import React, { useEffect, useState } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
+import React, { useEffect, useRef, useState } from 'react'
 
 const AlterarPermissoes = () => {
-  const { getAllUsers } = useAuth()
-  const [originalUsers, setOriginalUsers] = useState([])
+  // Estados para dados e loading
   const [users, setUsers] = useState([])
-  const [filteredUsers, setFilteredUsers] = useState([])
-  const [alert, setAlert] = useState({ visible: false, message: '', color: '' })
+  const [originalUsers, setOriginalUsers] = useState([])
   const [loading, setLoading] = useState(true)
+  const [requestError, setRequestError] = useState(null)
 
-  // Estados para os filtros
+  // Estados para filtros
   const [searchTerm, setSearchTerm] = useState('')
   const [accessLevelFilter, setAccessLevelFilter] = useState('all')
   const [sortOption, setSortOption] = useState('alphabetical')
@@ -43,100 +42,107 @@ const AlterarPermissoes = () => {
   // Estados para paginação
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
+  // Cache de requisições
+  const requestCache = useRef({})
+  const abortController = useRef(null)
+
+  // Debounce para pesquisa
+  const debounceTimeout = useRef(null)
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+
+  // Atualizar debounced search term
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const response = await getAllUsers()
+    debounceTimeout.current = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setCurrentPage(1) // Resetar para a primeira página ao mudar pesquisa
+    }, 500)
 
-        let usersData = Array.isArray(response) ? response : []
-        if (response && response.users && Array.isArray(response.users)) {
-          usersData = response.users
-        }
+    return () => clearTimeout(debounceTimeout.current)
+  }, [searchTerm])
 
-        const formattedUsers = Array.isArray(usersData) ? usersData : []
-        setOriginalUsers([...formattedUsers])
-        setUsers(formattedUsers)
-        setFilteredUsers(formattedUsers)
-        setLoading(false)
-      } catch (error) {
-        console.error('Erro ao carregar usuários:', error)
-        setAlert({
-          visible: true,
-          message: 'Erro ao carregar usuários. Tente novamente mais tarde.',
-          color: 'danger',
+  // Buscar usuários com filtros
+  const fetchUsers = async () => {
+    if (abortController.current) {
+      abortController.current.abort()
+    }
+
+    abortController.current = new AbortController()
+
+    const cacheKey = JSON.stringify({
+      search: debouncedSearchTerm,
+      accessLevel: accessLevelFilter,
+      sort: sortOption,
+      page: currentPage,
+      limit: itemsPerPage,
+    })
+
+    // Verificar cache
+    if (requestCache.current[cacheKey]) {
+      const { data, total } = requestCache.current[cacheKey]
+      setUsers(data)
+      setTotalItems(total)
+      setTotalPages(Math.ceil(total / itemsPerPage))
+      return
+    }
+
+    setLoading(true)
+    setRequestError(null)
+
+    try {
+      const response = await axios.get('http://localhost:5000/api/users', {
+        params: {
+          search: debouncedSearchTerm,
+          accessLevel: accessLevelFilter,
+          sort: sortOption,
+          page: currentPage,
+          limit: itemsPerPage,
+        },
+        signal: abortController.current.signal,
+      })
+
+      const { data, total } = response.data
+
+      // Atualizar cache
+      requestCache.current[cacheKey] = { data, total }
+
+      setUsers(data)
+      setOriginalUsers(data)
+      setTotalItems(total)
+      setTotalPages(Math.ceil(total / itemsPerPage))
+    } catch (error) {
+      if (!axios.isCancel(error)) {
+        console.error('Erro ao buscar usuários:', error)
+        setRequestError({
+          message: 'Erro ao carregar usuários. Tente novamente.',
+          details: error.response?.data?.message || error.message,
         })
-        setLoading(false)
-        setOriginalUsers([])
-        setUsers([])
-        setFilteredUsers([])
+      }
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Efeito para buscar usuários quando filtros ou paginação mudam
+  useEffect(() => {
+    fetchUsers()
+
+    return () => {
+      if (abortController.current) {
+        abortController.current.abort()
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
 
-    fetchUsers()
-  }, [getAllUsers])
-
-  // Efeito para aplicar filtros e ordenação
+  // Limpar cache quando componentes são desmontados
   useEffect(() => {
-    let result = [...users]
-
-    // Aplicar filtro de busca
-    if (searchTerm) {
-      const term = searchTerm.toLowerCase()
-      result = result.filter(
-        (user) =>
-          user.Usr_Nome?.toLowerCase().includes(term) ||
-          user.nome?.toLowerCase().includes(term) ||
-          user.name?.toLowerCase().includes(term) ||
-          user.Usr_Email?.toLowerCase().includes(term) ||
-          user.email?.toLowerCase().includes(term),
-      )
+    return () => {
+      requestCache.current = {}
     }
-
-    // Aplicar filtro de nível de acesso
-    if (accessLevelFilter !== 'all') {
-      result = result.filter(
-        (user) => String(user.Usr_Nac_Id || user.nivelAcesso || '1') === accessLevelFilter,
-      )
-    }
-
-    // Aplicar ordenação
-    if (sortOption === 'alphabetical') {
-      result.sort((a, b) => {
-        const nameA = (a.Usr_Nome || a.nome || a.name || '').toLowerCase()
-        const nameB = (b.Usr_Nome || b.nome || b.name || '').toLowerCase()
-        return nameA.localeCompare(nameB)
-      })
-    } else if (sortOption === 'accessLevel') {
-      result.sort((a, b) => {
-        const levelA = parseInt(a.Usr_Nac_Id || a.nivelAcesso || '1')
-        const levelB = parseInt(b.Usr_Nac_Id || b.nivelAcesso || '1')
-        return levelB - levelA
-      })
-    }
-
-    setFilteredUsers(result)
-    setCurrentPage(1) // Resetar para a primeira página quando os filtros mudam
-  }, [searchTerm, accessLevelFilter, sortOption, users])
-
-  // Efeito para calcular o total de páginas quando filteredUsers muda
-  useEffect(() => {
-    const total = Math.ceil(filteredUsers.length / itemsPerPage)
-    setTotalPages(total > 0 ? total : 1)
-
-    // Ajustar currentPage se necessário
-    if (currentPage > total && total > 0) {
-      setCurrentPage(total)
-    }
-  }, [filteredUsers, itemsPerPage, currentPage])
-
-  // Obter usuários da página atual
-  const getCurrentPageUsers = () => {
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    return filteredUsers.slice(startIndex, endIndex)
-  }
+  }, [])
 
   const Usr_Nac_IdOptions = [
     { value: '1', label: 'Usuário' },
@@ -163,8 +169,7 @@ const AlterarPermissoes = () => {
       }))
 
     if (changedUsers.length === 0) {
-      setAlert({
-        visible: true,
+      setRequestError({
         message: 'Nenhuma alteração foi feita.',
         color: 'info',
       })
@@ -176,28 +181,28 @@ const AlterarPermissoes = () => {
         users: changedUsers,
       })
 
-      console.log('Resposta do servidor:', response.data)
+      // Limpar cache após atualização
+      requestCache.current = {}
+
+      // Recarregar dados
+      await fetchUsers()
 
       if (response.data.partialSuccess) {
-        setAlert({
-          visible: true,
+        setRequestError({
           message: `Atualizado com sucesso para ${response.data.successCount} usuários, ${response.data.failedCount} falhas.`,
           color: 'warning',
         })
       } else {
-        setAlert({
-          visible: true,
+        setRequestError({
           message: response.data.message,
           color: 'success',
         })
-        setOriginalUsers([...users])
       }
     } catch (error) {
-      console.log(error)
-      console.log(changedUsers)
-      setAlert({
-        visible: true,
+      console.error('Erro ao atualizar permissões:', error)
+      setRequestError({
         message: 'Erro ao atualizar permissões',
+        details: error.response?.data?.message || error.message,
         color: 'danger',
       })
     }
@@ -209,19 +214,7 @@ const AlterarPermissoes = () => {
 
   const handleItemsPerPageChange = (e) => {
     setItemsPerPage(Number(e.target.value))
-    setCurrentPage(1) // Resetar para a primeira página quando muda o número de itens por página
-  }
-
-  if (loading) {
-    return (
-      <CContainer>
-        <CCard>
-          <CCardBody className="text-center">
-            <div>Carregando usuários...</div>
-          </CCardBody>
-        </CCard>
-      </CContainer>
-    )
+    setCurrentPage(1)
   }
 
   return (
@@ -232,9 +225,8 @@ const AlterarPermissoes = () => {
         </CCardHeader>
 
         <CCardBody>
-          {/* Filtros - Versão responsiva */}
+          {/* Filtros */}
           <CRow className="mb-3 g-3">
-            {/* Barra de pesquisa - Ocupa toda a largura em mobile */}
             <CCol xs={12} sm={12} md={6} lg={6} xl={6}>
               <CInputGroup>
                 <CFormInput
@@ -243,16 +235,19 @@ const AlterarPermissoes = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
+                {loading && (
+                  <span className="input-group-text">
+                    <CSpinner size="sm" />
+                  </span>
+                )}
               </CInputGroup>
             </CCol>
 
-            {/* Filtro de nível de acesso - Metade da largura em mobile, terço em desktop */}
             <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CFormSelect
                 value={accessLevelFilter}
                 onChange={(e) => setAccessLevelFilter(e.target.value)}
-                aria-label="Filtrar por nível de acesso"
-                className="text-truncate"
+                disabled={loading}
               >
                 <option value="all">Todos os níveis</option>
                 <option value="1">Usuário</option>
@@ -261,17 +256,20 @@ const AlterarPermissoes = () => {
               </CFormSelect>
             </CCol>
 
-            {/* Dropdown de ordenação - Metade da largura em mobile, terço em desktop */}
             <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CDropdown className="w-100 d-flex">
-                <CDropdownToggle color="secondary" className="w-100 text-truncate text-start">
+                <CDropdownToggle
+                  color="secondary"
+                  className="w-100 text-truncate text-start"
+                  disabled={loading}
+                >
                   {sortOption === 'alphabetical' ? 'Ordem Alfabética' : 'Nível de Acesso'}
                 </CDropdownToggle>
                 <CDropdownMenu className="w-100">
-                  <CDropdownItem onClick={() => setSortOption('alphabetical')}>
+                  <CDropdownItem onClick={() => setSortOption('alphabetical')} disabled={loading}>
                     Ordem Alfabética
                   </CDropdownItem>
-                  <CDropdownItem onClick={() => setSortOption('accessLevel')}>
+                  <CDropdownItem onClick={() => setSortOption('accessLevel')} disabled={loading}>
                     Nível de Acesso
                   </CDropdownItem>
                 </CDropdownMenu>
@@ -279,62 +277,78 @@ const AlterarPermissoes = () => {
             </CCol>
           </CRow>
 
-          {/* Controles de paginação - Topo */}
+          {/* Controles de paginação */}
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
-                aria-label="Itens por página"
+                disabled={loading}
               >
-                <option value={5}>5 itens por página</option>
-                <option value={10}>10 itens por página</option>
-                <option value={20}>20 itens por página</option>
-                <option value={50}>50 itens por página</option>
-                <option value={100}>100 itens por página</option>
+                <option value={5}>5 itens</option>
+                <option value={10}>10 itens</option>
+                <option value={20}>20 itens</option>
+                <option value={50}>50 itens</option>
               </CFormSelect>
             </CCol>
             <CCol xs={12} sm={6} md={8} lg={9} xl={10} className="text-sm-end mt-2 mt-sm-0">
-              <span className="me-2">
-                Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
-                {Math.min(currentPage * itemsPerPage, filteredUsers.length)} de{' '}
-                {filteredUsers.length} usuários
-              </span>
+              {!loading && (
+                <span className="me-2">
+                  Mostrando {(currentPage - 1) * itemsPerPage + 1} a{' '}
+                  {Math.min(currentPage * itemsPerPage, totalItems)} de {totalItems} usuários
+                </span>
+              )}
             </CCol>
           </CRow>
 
-          {filteredUsers.length === 0 ? (
-            <CAlert color="info">Nenhum usuário encontrado com os filtros aplicados</CAlert>
-          ) : (
+          {/* Feedback de loading/erro */}
+          {loading && (
+            <div className="text-center my-5">
+              <CSpinner />
+              <p>Carregando usuários...</p>
+            </div>
+          )}
+
+          {requestError && !loading && (
+            <CAlert color={requestError.color || 'danger'} className="mt-3">
+              <strong>{requestError.message}</strong>
+              {requestError.details && <div className="mt-2">{requestError.details}</div>}
+              <div className="mt-2">
+                <CButton color="primary" size="sm" onClick={fetchUsers}>
+                  Tentar novamente
+                </CButton>
+              </div>
+            </CAlert>
+          )}
+
+          {/* Tabela de usuários */}
+          {!loading && !requestError && (
             <>
               <div className="table-responsive">
                 <CTable hover responsive>
                   <CTableHead>
                     <CTableRow>
-                      <CTableHeaderCell scope="col">Nome</CTableHeaderCell>
-                      <CTableHeaderCell scope="col">E-mail</CTableHeaderCell>
-                      <CTableHeaderCell scope="col" className="min-width-150">
-                        Nível de acesso
-                      </CTableHeaderCell>
+                      <CTableHeaderCell>Nome</CTableHeaderCell>
+                      <CTableHeaderCell>E-mail</CTableHeaderCell>
+                      <CTableHeaderCell className="min-width-150">Nível de acesso</CTableHeaderCell>
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {getCurrentPageUsers().map((user) => (
+                    {users.map((user) => (
                       <CTableRow key={user.Usr_Id || user.id || user.cpf}>
-                        <CTableDataCell className="text-nowrap table-cell-align">
+                        <CTableDataCell className="text-nowrap">
                           {user.Usr_Nome || user.nome || user.name}
                         </CTableDataCell>
-                        <CTableDataCell className="text-nowrap table-cell-align">
+                        <CTableDataCell className="text-nowrap">
                           {user.Usr_Email || user.email}
                         </CTableDataCell>
-                        <CTableDataCell className="table-cell-align">
+                        <CTableDataCell>
                           <CFormSelect
                             value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
                             onChange={(e) =>
                               handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
                             }
-                            aria-label="Selecionar permissão"
-                            className="text-truncate min-width-150"
+                            disabled={loading}
                           >
                             {Usr_Nac_IdOptions.map((option) => (
                               <option key={option.value} value={option.value}>
@@ -352,76 +366,57 @@ const AlterarPermissoes = () => {
               {/* Paginação */}
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-3">
-                  <CPagination aria-label="Page navigation">
+                  <CPagination>
                     <CPaginationItem
-                      disabled={currentPage === 1}
+                      disabled={currentPage === 1 || loading}
                       onClick={() => handlePageChange(currentPage - 1)}
-                      aria-label="Previous"
                     >
-                      <span aria-hidden="true">&laquo;</span>
+                      &laquo;
                     </CPaginationItem>
 
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                      <CPaginationItem
-                        key={page}
-                        active={page === currentPage}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </CPaginationItem>
-                    ))}
+                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                      let pageNum
+                      if (totalPages <= 5) {
+                        pageNum = i + 1
+                      } else if (currentPage <= 3) {
+                        pageNum = i + 1
+                      } else if (currentPage >= totalPages - 2) {
+                        pageNum = totalPages - 4 + i
+                      } else {
+                        pageNum = currentPage - 2 + i
+                      }
+
+                      return (
+                        <CPaginationItem
+                          key={pageNum}
+                          active={pageNum === currentPage}
+                          onClick={() => handlePageChange(pageNum)}
+                          disabled={loading}
+                        >
+                          {pageNum}
+                        </CPaginationItem>
+                      )
+                    })}
 
                     <CPaginationItem
-                      disabled={currentPage === totalPages}
+                      disabled={currentPage === totalPages || loading}
                       onClick={() => handlePageChange(currentPage + 1)}
-                      aria-label="Next"
                     >
-                      <span aria-hidden="true">&raquo;</span>
+                      &raquo;
                     </CPaginationItem>
                   </CPagination>
                 </div>
               )}
 
               <div className="text-right mt-3">
-                <CButton color="primary" onClick={handleSaveChanges} className="px-4">
-                  Salvar Alterações
+                <CButton color="primary" onClick={handleSaveChanges} disabled={loading}>
+                  {loading ? 'Salvando...' : 'Salvar Alterações'}
                 </CButton>
               </div>
             </>
           )}
-          {alert.visible && (
-            <CAlert color={alert.color} className="mt-3">
-              {alert.message}
-            </CAlert>
-          )}
         </CCardBody>
       </CCard>
-
-      {/* Adicionando estilos CSS para garantir a exibição correta */}
-      <style>
-        {`
-          .min-width-150 {
-            min-width: 150px !important;
-          }
-          .text-truncate {
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-          }
-          .table-responsive {
-            overflow-x: auto;
-            -webkit-overflow-scrolling: touch;
-          }
-          .table-cell-align {
-            vertical-align: middle !important;
-          }
-          @media (max-width: 576px) {
-            .min-width-150 {
-              min-width: 120px !important;
-            }
-          }
-  `}
-      </style>
     </CContainer>
   )
 }
