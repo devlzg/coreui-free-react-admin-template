@@ -57,7 +57,7 @@ const AlterarPermissoes = () => {
   useEffect(() => {
     debounceTimeout.current = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
-      setCurrentPage(1) // Resetar para a primeira página ao mudar pesquisa
+      setCurrentPage(1)
     }, 500)
 
     return () => clearTimeout(debounceTimeout.current)
@@ -103,15 +103,17 @@ const AlterarPermissoes = () => {
         signal: abortController.current.signal,
       })
 
-      const { data, total } = response.data
+      // Corrigindo a desestruturação para a estrutura real da API
+      const { data: usersData, pagination } = response.data
+      const total = pagination?.total || usersData.length
 
       // Atualizar cache
-      requestCache.current[cacheKey] = { data, total }
+      requestCache.current[cacheKey] = { data: usersData, total }
 
-      setUsers(data)
-      setOriginalUsers(data)
+      setUsers(usersData)
+      setOriginalUsers([...usersData]) // Cria uma cópia para comparação
       setTotalItems(total)
-      setTotalPages(Math.ceil(total / itemsPerPage))
+      setTotalPages(pagination?.totalPages || Math.ceil(total / itemsPerPage))
     } catch (error) {
       if (!axios.isCancel(error)) {
         console.error('Erro ao buscar usuários:', error)
@@ -158,46 +160,61 @@ const AlterarPermissoes = () => {
   }
 
   const handleSaveChanges = async () => {
-    const changedUsers = users
-      .filter((user, index) => {
-        const originalUser = originalUsers[index]
-        return originalUser && user.Usr_Nac_Id !== originalUser.Usr_Nac_Id
-      })
-      .map((user) => ({
-        Usr_Id: user.Usr_Id || user.id,
-        Usr_Nac_Id: user.Usr_Nac_Id,
-      }))
-
-    if (changedUsers.length === 0) {
-      setRequestError({
-        message: 'Nenhuma alteração foi feita.',
-        color: 'info',
-      })
-      return
-    }
-
     try {
-      const response = await axios.put('http://localhost:5000/api/tb_usuario/update-permissions', {
+      const changedUsers = users.reduce((acc, user) => {
+        const originalUser = originalUsers.find(
+          (u) => u && user && (u.Usr_Id === user.Usr_Id || u.id === user.id),
+        )
+
+        if (originalUser && String(user.Usr_Nac_Id) !== String(originalUser.Usr_Nac_Id)) {
+          acc.push({
+            Usr_Id: user.Usr_Id || user.id,
+            Usr_Nac_Id: String(user.Usr_Nac_Id),
+          })
+        }
+        return acc
+      }, [])
+
+      if (changedUsers.length === 0) {
+        setRequestError({
+          message: 'Nenhuma alteração foi feita.',
+          color: 'info',
+        })
+        return
+      }
+
+      setRequestError(null)
+      const loadingTimeout = setTimeout(() => {
+        setRequestError({
+          message: 'A operação está demorando mais que o normal...',
+          color: 'warning',
+        })
+      }, 5000)
+
+      await axios.put('http://localhost:5000/api/tb_usuario/update-permissions', {
         users: changedUsers,
       })
 
-      // Limpar cache após atualização
+      clearTimeout(loadingTimeout)
       requestCache.current = {}
 
-      // Recarregar dados
-      await fetchUsers()
+      // Atualizar os dados localmente antes de buscar novamente
+      const updatedUsers = users.map((user) => {
+        const changedUser = changedUsers.find(
+          (u) => u.Usr_Id === user.Usr_Id || u.Usr_Id === user.id,
+        )
+        return changedUser ? { ...user, Usr_Nac_Id: changedUser.Usr_Nac_Id } : user
+      })
+      setUsers(updatedUsers)
+      setOriginalUsers([...updatedUsers])
 
-      if (response.data.partialSuccess) {
-        setRequestError({
-          message: `Atualizado com sucesso para ${response.data.successCount} usuários, ${response.data.failedCount} falhas.`,
-          color: 'warning',
-        })
-      } else {
-        setRequestError({
-          message: response.data.message,
-          color: 'success',
-        })
-      }
+      // Buscar os dados atualizados (opcional, para garantir sincronização com o servidor)
+      fetchUsers()
+
+      setRequestError({
+        message: 'Permissões atualizadas com sucesso!',
+        color: 'success',
+      })
     } catch (error) {
       console.error('Erro ao atualizar permissões:', error)
       setRequestError({
@@ -207,7 +224,6 @@ const AlterarPermissoes = () => {
       })
     }
   }
-
   const handlePageChange = (page) => {
     setCurrentPage(page)
   }
@@ -313,11 +329,6 @@ const AlterarPermissoes = () => {
             <CAlert color={requestError.color || 'danger'} className="mt-3">
               <strong>{requestError.message}</strong>
               {requestError.details && <div className="mt-2">{requestError.details}</div>}
-              <div className="mt-2">
-                <CButton color="primary" size="sm" onClick={fetchUsers}>
-                  Tentar novamente
-                </CButton>
-              </div>
             </CAlert>
           )}
 
