@@ -4,7 +4,7 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 
 import { CSpinner, useColorModes } from '@coreui/react'
-import PrivateRoute from './components/PrivateRoute.js'
+import ProtectedRoute from './components/ProtectedRoute.js'
 import './scss/style.scss'
 
 // Containers
@@ -53,9 +53,9 @@ const App = () => {
               exact
               path="/profile"
               name="Profile Page"
-              element={<PrivateRoute element={<Profile />} />}
+              element={<ProtectedRoute element={<Profile />} />}
             />
-            <Route path="*" name="Home" element={<PrivateRoute element={<DefaultLayout />} />} />
+            <Route path="*" name="Home" element={<ProtectedRoute element={<DefaultLayout />} />} />
           </Routes>
         </AuthProvider>
       </Suspense>

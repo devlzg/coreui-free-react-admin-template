@@ -1,7 +1,7 @@
 import { CContainer, CSpinner } from '@coreui/react'
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
-import PrivateRoute from './PrivateRoute'
+import ProtectedRoute from './ProtectedRoute'
 
 // routes config
 import routes from '../routes'
@@ -35,9 +35,9 @@ const AppContent = () => {
           <Route
             path="/"
             element={
-              <PrivateRoute>
+              <ProtectedRoute>
                 <Navigate to="dashboard" replace />
-              </PrivateRoute>
+              </ProtectedRoute>
             }
           />
         </Routes>
