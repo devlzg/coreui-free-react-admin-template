@@ -32,6 +32,7 @@ const EmpresaEspelho = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const abortController = useRef(null)
+  const requestCache = useRef({})
 
   // Estados para os filtros
   const [filters, setFilters] = useState({
@@ -56,6 +57,18 @@ const EmpresaEspelho = () => {
 
     abortController.current = new AbortController()
 
+    const cacheKey = JSON.stringify(filters)
+
+    // Verificar cache antes de fazer a requisição
+    if (requestCache.current[cacheKey]) {
+      const cachedData = requestCache.current[cacheKey]
+      setEmpresas(cachedData.data)
+      setTotalItems(cachedData.total)
+      setTotalPages(cachedData.totalPages)
+      setLoading(false)
+      return
+    }
+
     setLoading(true)
     setError(null)
 
@@ -65,15 +78,29 @@ const EmpresaEspelho = () => {
         signal: abortController.current.signal,
       })
 
-      // Verificação mais robusta da estrutura de resposta
-      const responseData = response.data || {}
-      const empresasData = Array.isArray(responseData.data) ? responseData.data : []
-      const total = typeof responseData.total === 'number' ? responseData.total : 0
-      const totalPages = typeof responseData.totalPages === 'number' ? responseData.totalPages : 1
+      // Ajuste para a estrutura esperada da API
+      const { data: empresasData, pagination } = response.data
+      const total = pagination?.total || 0
+      const totalPages = pagination?.totalPages || 1
+
+      // Atualizar cache
+      requestCache.current[cacheKey] = {
+        data: empresasData,
+        total,
+        totalPages,
+        pagination,
+      }
 
       setEmpresas(empresasData)
       setTotalItems(total)
       setTotalPages(totalPages)
+
+      // Sincronizar paginação com a resposta da API
+      setFilters((prev) => ({
+        ...prev,
+        page: pagination?.currentPage || prev.page,
+        limit: pagination?.itemsPerPage || prev.limit,
+      }))
     } catch (err) {
       if (!axios.isCancel(err)) {
         console.error('Erro ao buscar empresas:', {
