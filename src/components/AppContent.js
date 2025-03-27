@@ -1,9 +1,10 @@
 import { CContainer, CSpinner } from '@coreui/react'
 import React, { Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
+import ProtectedByRole from './ProtectedByRole'
 import ProtectedRoute from './ProtectedRoute'
 
-// routes config
+// rotas de componentes gerados dentro da parte principal da página
 import routes from '../routes'
 
 const AppContent = () => {
@@ -25,7 +26,9 @@ const AppContent = () => {
                     route.path === '/404' ? (
                       <route.element />
                     ) : (
-                      <route.element />
+                      <ProtectedByRole requiredAccessLevel={parseInt(route.requiredAccessLevel)}>
+                        <route.element />
+                      </ProtectedByRole>
                     )
                   }
                 />
