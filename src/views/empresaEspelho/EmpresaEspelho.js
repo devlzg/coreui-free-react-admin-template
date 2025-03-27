@@ -24,10 +24,8 @@ import {
 } from '@coreui/react'
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
-import { useAuth } from '../../contexts/AuthContext'
 
 const EmpresaEspelho = () => {
-  const { getAllEmpresas } = useAuth()
   const [empresas, setEmpresas] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
