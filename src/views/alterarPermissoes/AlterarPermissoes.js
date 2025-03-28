@@ -254,6 +254,7 @@ const AlterarPermissoes = () => {
             <CCol xs={12} sm={12} md={6} lg={6} xl={6}>
               <CInputGroup>
                 <CFormInput
+                  id="pesquisa nome ou email"
                   type="text"
                   placeholder="Pesquisar por nome ou e-mail..."
                   value={searchTerm}
@@ -270,6 +271,7 @@ const AlterarPermissoes = () => {
 
             <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CFormSelect
+                id="filtro de cargo"
                 value={accessLevelFilter}
                 onChange={(e) => setAccessLevelFilter(e.target.value)}
                 disabled={loading}
@@ -308,6 +310,7 @@ const AlterarPermissoes = () => {
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
+                id="qtd de itens por página"
                 value={itemsPerPage}
                 onChange={handleItemsPerPageChange}
                 disabled={loading}
@@ -337,11 +340,7 @@ const AlterarPermissoes = () => {
           )}
 
           {requestError && (
-            <CAlert
-              color={requestError.color || 'danger'}
-              className="mt-3"
-              onDismiss={() => setRequestError(null)}
-            >
+            <CAlert color={requestError.color || 'danger'} className="mt-3">
               <strong>{requestError.message}</strong>
               {requestError.details && <div className="mt-2">{requestError.details}</div>}
             </CAlert>
@@ -370,6 +369,7 @@ const AlterarPermissoes = () => {
                         </CTableDataCell>
                         <CTableDataCell>
                           <CFormSelect
+                            id={`select-${user.Usr_Id || user.id}`}
                             value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
                             onChange={(e) =>
                               handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)

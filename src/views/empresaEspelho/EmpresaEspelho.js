@@ -180,6 +180,7 @@ const EmpresaEspelho = () => {
             <CCol xs={12} sm={6} md={3}>
               <CInputGroup>
                 <CFormInput
+                  id="pesquisa por nome"
                   type="text"
                   placeholder="Nome da empresa"
                   value={filters.search}
@@ -197,6 +198,7 @@ const EmpresaEspelho = () => {
             <CCol xs={12} sm={6} md={3}>
               <CInputGroup>
                 <CFormInput
+                  id="pesquisa por cnpj"
                   type="text"
                   placeholder="CNPJ da empresa"
                   value={filters.cnpj}
@@ -208,6 +210,7 @@ const EmpresaEspelho = () => {
             {/* filtro por status (extendido ou incompleto) */}
             <CCol xs={12} sm={6} md={2}>
               <CFormSelect
+                id="filtro por status"
                 value={filters.status}
                 onChange={(e) => handleFilterChange('status', e.target.value)}
                 disabled={loading}
@@ -225,6 +228,7 @@ const EmpresaEspelho = () => {
               <CInputGroup>
                 <CInputGroupText>De</CInputGroupText>
                 <CFormInput
+                  id="filtro por data inicial"
                   type="date"
                   value={filters.startDate}
                   onChange={(e) => handleFilterChange('startDate', e.target.value)}
@@ -238,6 +242,7 @@ const EmpresaEspelho = () => {
               <CInputGroup>
                 <CInputGroupText>Até</CInputGroupText>
                 <CFormInput
+                  id="filtro por data final"
                   type="date"
                   value={filters.endDate}
                   onChange={(e) => handleFilterChange('endDate', e.target.value)}
@@ -252,6 +257,7 @@ const EmpresaEspelho = () => {
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
+                id="itens por página"
                 value={filters.limit}
                 onChange={handleItemsPerPageChange}
                 disabled={loading}
