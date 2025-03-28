@@ -28,32 +28,32 @@ import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
 
 const AlterarPermissoes = () => {
-  // Estados para dados e loading
+  // estados para dados e carregamento
   const [users, setUsers] = useState([])
   const [originalUsers, setOriginalUsers] = useState([])
   const [loading, setLoading] = useState(true)
   const [requestError, setRequestError] = useState(null)
 
-  // Estados para filtros
+  // estados para filtros e busca
   const [searchTerm, setSearchTerm] = useState('')
   const [accessLevelFilter, setAccessLevelFilter] = useState('all')
   const [sortOption, setSortOption] = useState('alphabetical')
 
-  // Estados para paginação
+  // estados paginação
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
   const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Cache de requisições
+  // cache de requisições
   const requestCache = useRef({})
   const abortController = useRef(null)
 
-  // Debounce para pesquisa
+  // debounce quando pesquisar
   const debounceTimeout = useRef(null)
   const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
 
-  // Atualizar debounced search term
+  // atualizarsearch term do debounce
   useEffect(() => {
     debounceTimeout.current = setTimeout(() => {
       setDebouncedSearchTerm(searchTerm)
@@ -63,13 +63,13 @@ const AlterarPermissoes = () => {
     return () => clearTimeout(debounceTimeout.current)
   }, [searchTerm])
 
-  // Buscar usuários com filtros
+  // buscar usuários com filtros
   const fetchUsers = React.useCallback(async () => {
     if (abortController.current) {
       abortController.current.abort()
     }
 
-    abortController.current = new AbortController()
+    abortController.current = new AbortController() // serve pra cancelar requisições
 
     const cacheKey = JSON.stringify({
       search: debouncedSearchTerm,
@@ -79,7 +79,7 @@ const AlterarPermissoes = () => {
       limit: itemsPerPage,
     })
 
-    // Verificar cache
+    // verificar cache
     if (requestCache.current[cacheKey]) {
       const { data, total } = requestCache.current[cacheKey]
       setUsers(data)
@@ -107,11 +107,11 @@ const AlterarPermissoes = () => {
       const { data: usersData, pagination } = response.data
       const total = pagination?.total || usersData.length
 
-      // Atualizar cache
+      // atualiza o cache
       requestCache.current[cacheKey] = { data: usersData, total }
 
       setUsers(usersData)
-      setOriginalUsers([...usersData]) // Cria uma cópia para comparação
+      setOriginalUsers([...usersData]) // cria uma cópia para comparar depois
       setTotalItems(total)
       setTotalPages(pagination?.totalPages || Math.ceil(total / itemsPerPage))
     } catch (error) {
@@ -127,7 +127,7 @@ const AlterarPermissoes = () => {
     }
   }, [debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
 
-  // Efeito para buscar usuários quando filtros ou paginação mudam
+  // useeffect para buscar usuários quando filtros ou paginação mudam
   useEffect(() => {
     fetchUsers()
 
@@ -138,7 +138,7 @@ const AlterarPermissoes = () => {
     }
   }, [fetchUsers, debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
 
-  // Limpar cache quando componentes são desmontados
+  // hook pra limpar o cache quando componentes são desmontados
   useEffect(() => {
     return () => {
       requestCache.current = {}
@@ -160,6 +160,7 @@ const AlterarPermissoes = () => {
 
   const handleSaveChanges = async () => {
     try {
+      // isso aqui serve pra me dizer quais usuários mudaram de nível de acesso
       const changedUsers = users.reduce((acc, user) => {
         const originalUser = originalUsers.find(
           (u) => u && user && (u.Usr_Id === user.Usr_Id || u.id === user.id),
@@ -174,6 +175,7 @@ const AlterarPermissoes = () => {
         return acc
       }, [])
 
+      // msg pra quando não tem mudança
       if (changedUsers.length === 0) {
         setRequestError({
           message: 'Nenhuma alteração foi feita.',
@@ -182,6 +184,7 @@ const AlterarPermissoes = () => {
         return
       }
 
+      // msg pra quando a requisição demora
       setRequestError(null)
       const loadingTimeout = setTimeout(() => {
         setRequestError({
@@ -189,7 +192,7 @@ const AlterarPermissoes = () => {
           color: 'warning',
         })
       }, 5000)
-
+      // atualizando as permissões no servidor
       await axios.put('http://localhost:5000/api/tb_usuario/update-permissions', {
         users: changedUsers,
       })
@@ -197,7 +200,7 @@ const AlterarPermissoes = () => {
       clearTimeout(loadingTimeout)
       requestCache.current = {}
 
-      // Atualizar os dados localmente antes de buscar novamente
+      // atualiza os dados localmente antes de buscar novamente
       const updatedUsers = users.map((user) => {
         const changedUser = changedUsers.find(
           (u) => u.Usr_Id === user.Usr_Id || u.Usr_Id === user.id,
@@ -207,7 +210,7 @@ const AlterarPermissoes = () => {
       setUsers(updatedUsers)
       setOriginalUsers([...updatedUsers])
 
-      // Buscar os dados atualizados
+      //pega os dados atualizados
       await fetchUsers()
 
       setRequestError({
@@ -215,7 +218,7 @@ const AlterarPermissoes = () => {
         color: 'success',
       })
 
-      // Limpa a mensagem de sucesso após 3 segundos
+      // tira a mensagem de sucesso dps de 3 segundos
       setTimeout(() => {
         setRequestError(null)
       }, 3000)
@@ -246,7 +249,7 @@ const AlterarPermissoes = () => {
         </CCardHeader>
 
         <CCardBody>
-          {/* Filtros */}
+          {/* filtros */}
           <CRow className="mb-3 g-3">
             <CCol xs={12} sm={12} md={6} lg={6} xl={6}>
               <CInputGroup>
@@ -257,6 +260,7 @@ const AlterarPermissoes = () => {
                   onChange={(e) => setSearchTerm(e.target.value)}
                 />
                 {loading && (
+                  // simbolo de carregamento
                   <span className="input-group-text">
                     <CSpinner size="sm" />
                   </span>
@@ -270,6 +274,7 @@ const AlterarPermissoes = () => {
                 onChange={(e) => setAccessLevelFilter(e.target.value)}
                 disabled={loading}
               >
+                {/* opcoes do filtro de cargo */}
                 <option value="all">Todos os níveis</option>
                 <option value="1">Usuário</option>
                 <option value="2">Administrador</option>
@@ -277,6 +282,7 @@ const AlterarPermissoes = () => {
               </CFormSelect>
             </CCol>
 
+            {/* opcoes de ordenacao */}
             <CCol xs={6} sm={6} md={3} lg={3} xl={3}>
               <CDropdown className="w-100 d-flex">
                 <CDropdownToggle
@@ -298,7 +304,7 @@ const AlterarPermissoes = () => {
             </CCol>
           </CRow>
 
-          {/* Controles de paginação */}
+          {/* paginação */}
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
@@ -322,7 +328,7 @@ const AlterarPermissoes = () => {
             </CCol>
           </CRow>
 
-          {/* Feedback de loading/erro - agora aparece acima da tabela */}
+          {/* msg de loading/erro*/}
           {loading && (
             <div className="text-center my-5">
               <CSpinner />
@@ -341,7 +347,7 @@ const AlterarPermissoes = () => {
             </CAlert>
           )}
 
-          {/* Tabela e controles - agora sempre visíveis (exceto durante loading) */}
+          {/* tabela de usuarios */}
           {!loading && (
             <>
               <div className="table-responsive">
@@ -383,7 +389,7 @@ const AlterarPermissoes = () => {
                 </CTable>
               </div>
 
-              {/* Paginação */}
+              {/* logica da paginação */}
               {totalPages > 1 && (
                 <div className="d-flex justify-content-center mt-3">
                   <CPagination>
@@ -422,6 +428,7 @@ const AlterarPermissoes = () => {
                       disabled={currentPage === totalPages || loading}
                       onClick={() => handlePageChange(currentPage + 1)}
                     >
+                      {/* simbolo de troca de pagina */}
                       &raquo;
                     </CPaginationItem>
                   </CPagination>
@@ -429,6 +436,7 @@ const AlterarPermissoes = () => {
               )}
 
               <div className="text-right mt-3">
+                {/* botao para aplicar alteracoes */}
                 <CButton color="primary" onClick={handleSaveChanges} disabled={loading}>
                   {loading ? 'Salvando...' : 'Salvar Alterações'}
                 </CButton>
