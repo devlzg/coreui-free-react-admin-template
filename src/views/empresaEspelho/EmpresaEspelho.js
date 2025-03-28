@@ -32,7 +32,7 @@ const EmpresaEspelho = () => {
   const abortController = useRef(null)
   const requestCache = useRef({})
 
-  // Estados para os filtros
+  // estados para filtros
   const [filters, setFilters] = useState({
     search: '',
     cnpj: '',
@@ -43,11 +43,11 @@ const EmpresaEspelho = () => {
     limit: 10,
   })
 
-  // Estados para paginação
+  // estados para paginação
   const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
-  // Buscar empresas com filtros
+  // buscar empresas com filtros
   const fetchEmpresas = async () => {
     if (abortController.current) {
       abortController.current.abort()
@@ -57,7 +57,7 @@ const EmpresaEspelho = () => {
 
     const cacheKey = JSON.stringify(filters)
 
-    // Verificar cache antes de fazer a requisição
+    // verifica o cache antes de fazer a requisição
     if (requestCache.current[cacheKey]) {
       const cachedData = requestCache.current[cacheKey]
       setEmpresas(cachedData.data)
@@ -76,12 +76,12 @@ const EmpresaEspelho = () => {
         signal: abortController.current.signal,
       })
 
-      // Ajuste para a estrutura esperada da API
+      // ajustando para a estrutura esperada da API
       const { data: empresasData, pagination } = response.data
       const total = pagination?.total || 0
       const totalPages = pagination?.totalPages || 1
 
-      // Atualizar cache
+      // atualiza cache
       requestCache.current[cacheKey] = {
         data: empresasData,
         total,
@@ -93,7 +93,7 @@ const EmpresaEspelho = () => {
       setTotalItems(total)
       setTotalPages(totalPages)
 
-      // Sincronizar paginação com a resposta da API
+      // sincroniza a paginação com a resposta da API
       setFilters((prev) => ({
         ...prev,
         page: pagination?.currentPage || prev.page,
@@ -115,7 +115,7 @@ const EmpresaEspelho = () => {
     }
   }
 
-  // Atualizar busca quando filtros mudarem
+  // atualiza busca quando filtros mudarem
   useEffect(() => {
     const timer = setTimeout(() => {
       fetchEmpresas()
@@ -134,7 +134,7 @@ const EmpresaEspelho = () => {
     setFilters((prev) => ({
       ...prev,
       [name]: value,
-      page: 1, // Resetar para a primeira página ao mudar filtros
+      page: 1, // reseta para a primeira página dps de mudar filtros
     }))
   }
 
@@ -174,9 +174,9 @@ const EmpresaEspelho = () => {
         </CCardHeader>
 
         <CCardBody>
-          {/* Filtros */}
+          {/* filtros */}
           <CRow className="mb-3 g-3">
-            {/* Filtro por nome da empresa */}
+            {/* filtro pelo nome da empresa */}
             <CCol xs={12} sm={6} md={3}>
               <CInputGroup>
                 <CFormInput
@@ -193,7 +193,7 @@ const EmpresaEspelho = () => {
               </CInputGroup>
             </CCol>
 
-            {/* Filtro por CNPJ */}
+            {/* filtro por cnpj */}
             <CCol xs={12} sm={6} md={3}>
               <CInputGroup>
                 <CFormInput
@@ -205,7 +205,7 @@ const EmpresaEspelho = () => {
               </CInputGroup>
             </CCol>
 
-            {/* Filtro por status */}
+            {/* filtro por status (extendido ou incompleto) */}
             <CCol xs={12} sm={6} md={2}>
               <CFormSelect
                 value={filters.status}
@@ -220,7 +220,7 @@ const EmpresaEspelho = () => {
               </CFormSelect>
             </CCol>
 
-            {/* Filtro por data inicial */}
+            {/* filtro por data (inicial) */}
             <CCol xs={6} sm={6} md={2}>
               <CInputGroup>
                 <CInputGroupText>De</CInputGroupText>
@@ -233,7 +233,7 @@ const EmpresaEspelho = () => {
               </CInputGroup>
             </CCol>
 
-            {/* Filtro por data final */}
+            {/* filtro por data (final) */}
             <CCol xs={6} sm={6} md={2}>
               <CInputGroup>
                 <CInputGroupText>Até</CInputGroupText>
@@ -248,7 +248,7 @@ const EmpresaEspelho = () => {
             </CCol>
           </CRow>
 
-          {/* Controles de paginação */}
+          {/* controles da paginação */}
           <CRow className="mb-3 align-items-center">
             <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
               <CFormSelect
@@ -272,7 +272,7 @@ const EmpresaEspelho = () => {
             </CCol>
           </CRow>
 
-          {/* Mensagens de erro */}
+          {/* msg de erro */}
           {error && (
             <CAlert color="danger" className="mt-3">
               <strong>{error.message}</strong>
@@ -285,7 +285,7 @@ const EmpresaEspelho = () => {
             </CAlert>
           )}
 
-          {/* Tabela */}
+          {/* tabela */}
           <div className="table-responsive">
             <CTable hover responsive>
               <CTableHead>
@@ -339,7 +339,7 @@ const EmpresaEspelho = () => {
             </CTable>
           </div>
 
-          {/* Paginação */}
+          {/* paginacao */}
           {totalPages > 1 && (
             <div className="d-flex justify-content-center mt-3">
               <CPagination>
@@ -347,6 +347,7 @@ const EmpresaEspelho = () => {
                   disabled={filters.page === 1 || loading}
                   onClick={() => handlePageChange(filters.page - 1)}
                 >
+                  {/* simbolo pra pagina anterior */}
                   &laquo;
                 </CPaginationItem>
 
@@ -378,6 +379,7 @@ const EmpresaEspelho = () => {
                   disabled={filters.page === totalPages || loading}
                   onClick={() => handlePageChange(filters.page + 1)}
                 >
+                  {/* simbolo pra prox pagina */}
                   &raquo;
                 </CPaginationItem>
               </CPagination>

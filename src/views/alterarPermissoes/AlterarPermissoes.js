@@ -397,6 +397,7 @@ const AlterarPermissoes = () => {
                       disabled={currentPage === 1 || loading}
                       onClick={() => handlePageChange(currentPage - 1)}
                     >
+                      {/* simbolo pra prox pagina */}
                       &laquo;
                     </CPaginationItem>
 
@@ -428,7 +429,7 @@ const AlterarPermissoes = () => {
                       disabled={currentPage === totalPages || loading}
                       onClick={() => handlePageChange(currentPage + 1)}
                     >
-                      {/* simbolo de troca de pagina */}
+                      {/* simbolo pra prox pagina */}
                       &raquo;
                     </CPaginationItem>
                   </CPagination>
