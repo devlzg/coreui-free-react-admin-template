@@ -359,32 +359,40 @@ const AlterarPermissoes = () => {
                     </CTableRow>
                   </CTableHead>
                   <CTableBody>
-                    {users.map((user) => (
-                      <CTableRow key={user.Usr_Id || user.id || user.cpf}>
-                        <CTableDataCell className="text-nowrap">
-                          {user.Usr_Nome || user.nome || user.name}
-                        </CTableDataCell>
-                        <CTableDataCell className="text-nowrap">
-                          {user.Usr_Email || user.email}
-                        </CTableDataCell>
-                        <CTableDataCell>
-                          <CFormSelect
-                            id={`select-${user.Usr_Id || user.id}`}
-                            value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
-                            onChange={(e) =>
-                              handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
-                            }
-                            disabled={loading}
-                          >
-                            {Usr_Nac_IdOptions.map((option) => (
-                              <option key={option.value} value={option.value}>
-                                {option.label}
-                              </option>
-                            ))}
-                          </CFormSelect>
+                    {users.length === 0 ? (
+                      <CTableRow>
+                        <CTableDataCell colSpan={7} className="text-center">
+                          Nenhum usuário encontrado
                         </CTableDataCell>
                       </CTableRow>
-                    ))}
+                    ) : (
+                      users.map((user) => (
+                        <CTableRow key={user.Usr_Id || user.id || user.cpf}>
+                          <CTableDataCell className="text-nowrap">
+                            {user.Usr_Nome || user.nome || user.name}
+                          </CTableDataCell>
+                          <CTableDataCell className="text-nowrap">
+                            {user.Usr_Email || user.email}
+                          </CTableDataCell>
+                          <CTableDataCell>
+                            <CFormSelect
+                              id={`select-${user.Usr_Id || user.id}`}
+                              value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
+                              onChange={(e) =>
+                                handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
+                              }
+                              disabled={loading}
+                            >
+                              {Usr_Nac_IdOptions.map((option) => (
+                                <option key={option.value} value={option.value}>
+                                  {option.label}
+                                </option>
+                              ))}
+                            </CFormSelect>
+                          </CTableDataCell>
+                        </CTableRow>
+                      ))
+                    )}
                   </CTableBody>
                 </CTable>
               </div>
