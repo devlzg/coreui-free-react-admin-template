@@ -1,3 +1,5 @@
+import { cilCog, cilSave } from '@coreui/icons'
+import CIcon from '@coreui/icons-react'
 import {
   CAlert,
   CBadge,
@@ -303,6 +305,9 @@ const EmpresaEspelho = () => {
                   <CTableHeaderCell>Data de Cadastro</CTableHeaderCell>
                   <CTableHeaderCell>Cidade</CTableHeaderCell>
                   <CTableHeaderCell>Status</CTableHeaderCell>
+                  <CTableHeaderCell className="text-center">
+                    <CIcon icon={cilCog} />
+                  </CTableHeaderCell>
                 </CTableRow>
               </CTableHead>
               <CTableBody>
@@ -331,6 +336,11 @@ const EmpresaEspelho = () => {
                         >
                           {empresa.Emp_Status}
                         </CBadge>
+                      </CTableDataCell>
+                      <CTableDataCell className="text-left">
+                        <CButton>
+                          <CIcon icon={cilSave} />
+                        </CButton>
                       </CTableDataCell>
                     </CTableRow>
                   ))
