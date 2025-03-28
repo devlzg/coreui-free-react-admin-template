@@ -41,26 +41,6 @@ export const AuthProvider = ({ children }) => {
       })
   }
 
-  const getAllUsers = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/tb_usuario')
-      return response.data.tb_usuario
-    } catch (error) {
-      console.error('Erro ao buscar usuários:', error)
-      throw error
-    }
-  }
-
-  const getAllEmpresas = async () => {
-    try {
-      const response = await axios.get('http://localhost:5000/api/tb_empresas')
-      return response.data.tb_empresas
-    } catch (error) {
-      console.error('Erro ao buscar empresas:', error)
-      throw error
-    }
-  }
-
   const login = async (cpf, senha) => {
     try {
       const data = await authLogin(cpf, senha)
@@ -115,8 +95,6 @@ export const AuthProvider = ({ children }) => {
         isAuthenticated,
         getUsrNacIdByCpf,
         userNac,
-        getAllUsers,
-        getAllEmpresas,
       }}
     >
       {children}

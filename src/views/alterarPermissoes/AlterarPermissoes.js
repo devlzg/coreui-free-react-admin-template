@@ -397,7 +397,7 @@ const AlterarPermissoes = () => {
                       disabled={currentPage === 1 || loading}
                       onClick={() => handlePageChange(currentPage - 1)}
                     >
-                      {/* simbolo pra prox pagina */}
+                      {/* simbolo pra proxima pagina */}
                       &laquo;
                     </CPaginationItem>
 

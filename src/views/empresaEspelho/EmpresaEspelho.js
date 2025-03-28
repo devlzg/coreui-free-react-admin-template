@@ -379,7 +379,7 @@ const EmpresaEspelho = () => {
                   disabled={filters.page === totalPages || loading}
                   onClick={() => handlePageChange(filters.page + 1)}
                 >
-                  {/* simbolo pra prox pagina */}
+                  {/* simbolo pra proxima pagina */}
                   &raquo;
                 </CPaginationItem>
               </CPagination>
