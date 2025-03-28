@@ -64,7 +64,7 @@ const AlterarPermissoes = () => {
   }, [searchTerm])
 
   // Buscar usuários com filtros
-  const fetchUsers = async () => {
+  const fetchUsers = React.useCallback(async () => {
     if (abortController.current) {
       abortController.current.abort()
     }
@@ -125,7 +125,7 @@ const AlterarPermissoes = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
 
   // Efeito para buscar usuários quando filtros ou paginação mudam
   useEffect(() => {
@@ -136,8 +136,7 @@ const AlterarPermissoes = () => {
         abortController.current.abort()
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
+  }, [fetchUsers, debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
 
   // Limpar cache quando componentes são desmontados
   useEffect(() => {
@@ -208,13 +207,18 @@ const AlterarPermissoes = () => {
       setUsers(updatedUsers)
       setOriginalUsers([...updatedUsers])
 
-      // Buscar os dados atualizados (opcional, para garantir sincronização com o servidor)
-      fetchUsers()
+      // Buscar os dados atualizados
+      await fetchUsers()
 
       setRequestError({
         message: 'Permissões atualizadas com sucesso!',
         color: 'success',
       })
+
+      // Limpa a mensagem de sucesso após 3 segundos
+      setTimeout(() => {
+        setRequestError(null)
+      }, 3000)
     } catch (error) {
       console.error('Erro ao atualizar permissões:', error)
       setRequestError({
@@ -224,6 +228,7 @@ const AlterarPermissoes = () => {
       })
     }
   }
+
   const handlePageChange = (page) => {
     setCurrentPage(page)
   }
@@ -317,7 +322,7 @@ const AlterarPermissoes = () => {
             </CCol>
           </CRow>
 
-          {/* Feedback de loading/erro */}
+          {/* Feedback de loading/erro - agora aparece acima da tabela */}
           {loading && (
             <div className="text-center my-5">
               <CSpinner />
@@ -325,15 +330,19 @@ const AlterarPermissoes = () => {
             </div>
           )}
 
-          {requestError && !loading && (
-            <CAlert color={requestError.color || 'danger'} className="mt-3">
+          {requestError && (
+            <CAlert
+              color={requestError.color || 'danger'}
+              className="mt-3"
+              onDismiss={() => setRequestError(null)}
+            >
               <strong>{requestError.message}</strong>
               {requestError.details && <div className="mt-2">{requestError.details}</div>}
             </CAlert>
           )}
 
-          {/* Tabela de usuários */}
-          {!loading && !requestError && (
+          {/* Tabela e controles - agora sempre visíveis (exceto durante loading) */}
+          {!loading && (
             <>
               <div className="table-responsive">
                 <CTable hover responsive>
