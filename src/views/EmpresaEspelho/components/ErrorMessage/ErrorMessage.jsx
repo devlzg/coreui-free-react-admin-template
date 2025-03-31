@@ -1,4 +1,7 @@
-export const ErrorMessage = ({ error, fetchEmpresas }) => {
+import useEmpresas from '../../hooks/useEmpresas'
+
+export const ErrorMessage = () => {
+  const { error, fetchEmpresas } = useEmpresas()
   {
     error && (
       <CAlert color="danger" className="mt-3">

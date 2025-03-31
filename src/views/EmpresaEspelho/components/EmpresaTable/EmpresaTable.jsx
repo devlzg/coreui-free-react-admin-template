@@ -10,8 +10,10 @@ import {
   CTableHeaderCell,
   CTableRow,
 } from '@coreui/react'
+import useEmpresas from '../../hooks/useEmpresas'
 
-export const EmpresaTable = ({ empresas, loading }) => {
+export const EmpresaTable = () => {
+  const { empresas, loading } = useEmpresas()
   return (
     <div className="table-responsive">
       <CTable hover responsive>

@@ -1,6 +1,8 @@
 import { CCol, CFormSelect, CRow } from '@coreui/react'
+import useEmpresas from '../../hooks/useEmpresas'
 
-export const PaginationControls = ({ filters, handleItemsPerPageChange, loading, totalItems }) => {
+export const PaginationControls = () => {
+  const { loading, filters, totalItems, handleItemsPerPageChange } = useEmpresas()
   return (
     <CRow className="mb-3 align-items-center">
       <CCol xs={12} sm={6} md={4} lg={3} xl={2}>

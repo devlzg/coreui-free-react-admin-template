@@ -1,6 +1,8 @@
 import { CPagination, CPaginationItem } from '@coreui/react'
+import useEmpresas from '../../hooks/useEmpresas'
 
-export const PaginationNav = ({ filters, totalPages, loading, handlePageChange }) => {
+export const PaginationNav = () => {
+  const { loading, filters, totalPages, handlePageChange } = useEmpresas()
   return (
     totalPages > 1 && (
       <div className="d-flex justify-content-center mt-3">
