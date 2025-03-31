@@ -4,17 +4,17 @@ import { HashRouter, Route, Routes } from 'react-router-dom'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 
 import { CSpinner, useColorModes } from '@coreui/react'
-import ProtectedRoute from './components/ProtectedRoute.js'
+import ProtectedRoute from './components/ProtectedRoute.jsx'
 import './scss/style.scss'
 
 // Containers
-const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout'))
+const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout.jsx'))
 
 // Pages
-const Login = React.lazy(() => import('./views/pages/login/Login'))
-const Register = React.lazy(() => import('./views/pages/register/Register'))
+const Login = React.lazy(() => import('./views/pages/login/Login.js'))
+const Register = React.lazy(() => import('./views/pages/register/Register.js'))
 const Profile = React.lazy(() => import('./views/pages/profile/Profile.js'))
-const Page404 = React.lazy(() => import('./views/pages/page404/Page404'))
+const Page404 = React.lazy(() => import('./views/pages/page404/Page404.js'))
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
