@@ -7,8 +7,9 @@ import {
   CRow,
   CSpinner,
 } from '@coreui/react'
+import { statusOptions } from '../../utils/constants'
 
-export const Filters = ({ filters, loading, statusOptions, handleFilterChange }) => {
+export const Filters = ({ filters, loading, handleFilterChange }) => {
   return (
     <CRow className="mb-3 g-3">
       {/* filtro pelo nome da empresa */}

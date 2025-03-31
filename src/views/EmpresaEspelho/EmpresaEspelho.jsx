@@ -7,7 +7,6 @@ import { Filters } from './components/Filters/Filters'
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner'
 import { PaginationControls } from './components/Pagination/PaginationControls'
 import { PaginationNav } from './components/Pagination/PaginationNav'
-import { statusOptions } from './utils/constants.js'
 
 const EmpresaEspelho = () => {
   const [empresas, setEmpresas] = useState([])
@@ -16,6 +15,7 @@ const EmpresaEspelho = () => {
   const abortController = useRef(null)
   const requestCache = useRef({})
 
+  // referente a filtragem
   // estados para filtros
   const [filters, setFilters] = useState({
     search: '',
@@ -27,10 +27,12 @@ const EmpresaEspelho = () => {
     limit: 10,
   })
 
+  // referente a paginação
   // estados para paginação
   const [totalItems, setTotalItems] = useState(0)
   const [totalPages, setTotalPages] = useState(1)
 
+  // referente a filtragem
   // buscar empresas com filtros
   const fetchEmpresas = async () => {
     if (abortController.current) {
@@ -97,8 +99,9 @@ const EmpresaEspelho = () => {
     } finally {
       setLoading(false)
     }
-  }
+  } // fetchEmpresas()
 
+  // referente a filtragem
   // atualiza busca quando filtros mudarem
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -114,6 +117,7 @@ const EmpresaEspelho = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filters])
 
+  // referente a filtragem
   const handleFilterChange = (name, value) => {
     setFilters((prev) => ({
       ...prev,
@@ -122,10 +126,12 @@ const EmpresaEspelho = () => {
     }))
   }
 
+  // referente a paginacao
   const handlePageChange = (page) => {
     setFilters((prev) => ({ ...prev, page }))
   }
 
+  // referente a paginacao
   const handleItemsPerPageChange = (e) => {
     const limit = Number(e.target.value)
     setFilters((prev) => ({ ...prev, limit, page: 1 }))
@@ -145,12 +151,7 @@ const EmpresaEspelho = () => {
 
         <CCardBody>
           {/* filtros */}
-          <Filters
-            filters={filters}
-            loading={loading}
-            statusOptions={statusOptions}
-            handleFilterChange={handleFilterChange}
-          />
+          <Filters filters={filters} loading={loading} handleFilterChange={handleFilterChange} />
 
           {/* controles da paginação */}
           <PaginationControls
