@@ -338,9 +338,7 @@ const EmpresaEspelho = () => {
                         </CBadge>
                       </CTableDataCell>
                       <CTableDataCell className="text-left">
-                        <CButton>
-                          <CIcon icon={cilSave} />
-                        </CButton>
+                        <CIcon icon={cilSave} />
                       </CTableDataCell>
                     </CTableRow>
                   ))
