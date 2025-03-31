@@ -1,8 +1,10 @@
 import React from 'react'
 
 const Dashboard = React.lazy(() => import('./views/dashboard/Dashboard'))
-const AlterarPermissoes = React.lazy(() => import('./views/alterarPermissoes/AlterarPermissoes.js'))
-const EmpresaEspelho = React.lazy(() => import('./views/empresaEspelho/EmpresaEspelho.js'))
+const AlterarPermissoes = React.lazy(
+  () => import('./views/alterarPermissoes/AlterarPermissoes.jsx'),
+)
+const EmpresaEspelho = React.lazy(() => import('./views/empresaEspelho/EmpresaEspelho.jsx'))
 
 // é importante que todas as rotas tenham o requiredAccessLevel
 const routes = [

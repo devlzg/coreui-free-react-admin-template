@@ -11,10 +11,10 @@ import './scss/style.scss'
 const DefaultLayout = React.lazy(() => import('./layout/DefaultLayout.jsx'))
 
 // Pages
-const Login = React.lazy(() => import('./views/pages/login/Login.js'))
-const Register = React.lazy(() => import('./views/pages/register/Register.js'))
-const Profile = React.lazy(() => import('./views/pages/profile/Profile.js'))
-const Page404 = React.lazy(() => import('./views/pages/page404/Page404.js'))
+const Login = React.lazy(() => import('./views/pages/login/Login.jsx'))
+const Register = React.lazy(() => import('./views/pages/register/Register.jsx'))
+const Profile = React.lazy(() => import('./views/pages/profile/Profile.jsx'))
+const Page404 = React.lazy(() => import('./views/pages/page404/Page404.jsx'))
 
 const App = () => {
   const { isColorModeSet, setColorMode } = useColorModes('coreui-free-react-admin-template-theme')
