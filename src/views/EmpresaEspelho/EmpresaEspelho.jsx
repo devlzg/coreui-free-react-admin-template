@@ -1,31 +1,13 @@
-import { cilCog, cilSave } from '@coreui/icons'
-import CIcon from '@coreui/icons-react'
-import {
-  CAlert,
-  CBadge,
-  CButton,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CCol,
-  CContainer,
-  CFormInput,
-  CFormSelect,
-  CInputGroup,
-  CInputGroupText,
-  CPagination,
-  CPaginationItem,
-  CRow,
-  CSpinner,
-  CTable,
-  CTableBody,
-  CTableDataCell,
-  CTableHead,
-  CTableHeaderCell,
-  CTableRow,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CContainer } from '@coreui/react'
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
+import { EmpresaTable } from './components/EmpresaTable/EmpresaTable'
+import { ErrorMessage } from './components/ErrorMessage/ErrorMessage'
+import { Filters } from './components/Filters/Filters'
+import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner'
+import { PaginationControls } from './components/Pagination/PaginationControls'
+import { PaginationNav } from './components/Pagination/PaginationNav'
+import { statusOptions } from './utils/constants.js'
 
 const EmpresaEspelho = () => {
   const [empresas, setEmpresas] = useState([])
@@ -149,23 +131,9 @@ const EmpresaEspelho = () => {
     setFilters((prev) => ({ ...prev, limit, page: 1 }))
   }
 
-  const statusOptions = [
-    { value: 'all', label: 'Todos os status' },
-    { value: 'Exportado', label: 'Exportado' },
-    { value: 'Cadastro Incompleto', label: 'Cadastro Incompleto' },
-  ]
-
+  // renderiza mensagem de loading
   if (loading && empresas.length === 0) {
-    return (
-      <CContainer>
-        <CCard>
-          <CCardBody className="text-center">
-            <CSpinner />
-            <div>Carregando empresas...</div>
-          </CCardBody>
-        </CCard>
-      </CContainer>
-    )
+    return <LoadingSpinner />
   }
 
   return (
@@ -177,228 +145,34 @@ const EmpresaEspelho = () => {
 
         <CCardBody>
           {/* filtros */}
-          <CRow className="mb-3 g-3">
-            {/* filtro pelo nome da empresa */}
-            <CCol xs={12} sm={6} md={3}>
-              <CInputGroup>
-                <CFormInput
-                  id="pesquisa por nome"
-                  type="text"
-                  placeholder="Nome da empresa"
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange('search', e.target.value)}
-                />
-                {loading && (
-                  <CInputGroupText>
-                    <CSpinner size="sm" />
-                  </CInputGroupText>
-                )}
-              </CInputGroup>
-            </CCol>
-
-            {/* filtro por cnpj */}
-            <CCol xs={12} sm={6} md={3}>
-              <CInputGroup>
-                <CFormInput
-                  id="pesquisa por cnpj"
-                  type="text"
-                  placeholder="CNPJ da empresa"
-                  value={filters.cnpj}
-                  onChange={(e) => handleFilterChange('cnpj', e.target.value)}
-                />
-              </CInputGroup>
-            </CCol>
-
-            {/* filtro por status (extendido ou incompleto) */}
-            <CCol xs={12} sm={6} md={2}>
-              <CFormSelect
-                id="filtro por status"
-                value={filters.status}
-                onChange={(e) => handleFilterChange('status', e.target.value)}
-                disabled={loading}
-              >
-                {statusOptions.map((option) => (
-                  <option key={option.value} value={option.value}>
-                    {option.label}
-                  </option>
-                ))}
-              </CFormSelect>
-            </CCol>
-
-            {/* filtro por data (inicial) */}
-            <CCol xs={6} sm={6} md={2}>
-              <CInputGroup>
-                <CInputGroupText>De</CInputGroupText>
-                <CFormInput
-                  id="filtro por data inicial"
-                  type="date"
-                  value={filters.startDate}
-                  onChange={(e) => handleFilterChange('startDate', e.target.value)}
-                  disabled={loading}
-                />
-              </CInputGroup>
-            </CCol>
-
-            {/* filtro por data (final) */}
-            <CCol xs={6} sm={6} md={2}>
-              <CInputGroup>
-                <CInputGroupText>Até</CInputGroupText>
-                <CFormInput
-                  id="filtro por data final"
-                  type="date"
-                  value={filters.endDate}
-                  onChange={(e) => handleFilterChange('endDate', e.target.value)}
-                  disabled={loading}
-                  min={filters.startDate}
-                />
-              </CInputGroup>
-            </CCol>
-          </CRow>
+          <Filters
+            filters={filters}
+            loading={loading}
+            statusOptions={statusOptions}
+            handleFilterChange={handleFilterChange}
+          />
 
           {/* controles da paginação */}
-          <CRow className="mb-3 align-items-center">
-            <CCol xs={12} sm={6} md={4} lg={3} xl={2}>
-              <CFormSelect
-                id="itens por página"
-                value={filters.limit}
-                onChange={handleItemsPerPageChange}
-                disabled={loading}
-              >
-                <option value={5}>5 itens</option>
-                <option value={10}>10 itens</option>
-                <option value={20}>20 itens</option>
-                <option value={50}>50 itens</option>
-              </CFormSelect>
-            </CCol>
-            <CCol xs={12} sm={6} md={8} lg={9} xl={10} className="text-sm-end mt-2 mt-sm-0">
-              {!loading && (
-                <span className="me-2">
-                  Mostrando {(filters.page - 1) * filters.limit + 1} a{' '}
-                  {Math.min(filters.page * filters.limit, totalItems)} de {totalItems} empresas
-                </span>
-              )}
-            </CCol>
-          </CRow>
+          <PaginationControls
+            filters={filters}
+            handleItemsPerPageChange={handleItemsPerPageChange}
+            loading={loading}
+            totalItems={totalItems}
+          />
 
           {/* msg de erro */}
-          {error && (
-            <CAlert color="danger" className="mt-3">
-              <strong>{error.message}</strong>
-              {error.details && <div className="mt-2">{error.details}</div>}
-              <div className="mt-2">
-                <CButton color="primary" size="sm" onClick={fetchEmpresas}>
-                  Tentar novamente
-                </CButton>
-              </div>
-            </CAlert>
-          )}
+          <ErrorMessage error={error} fetchEmpresas={fetchEmpresas} />
 
           {/* tabela */}
-          <div className="table-responsive">
-            <CTable hover responsive>
-              <CTableHead>
-                <CTableRow>
-                  <CTableHeaderCell>ID</CTableHeaderCell>
-                  <CTableHeaderCell>Nome Fantasia</CTableHeaderCell>
-                  <CTableHeaderCell>N° CNPJ</CTableHeaderCell>
-                  <CTableHeaderCell>Contrato(S4E)</CTableHeaderCell>
-                  <CTableHeaderCell>Data de Cadastro</CTableHeaderCell>
-                  <CTableHeaderCell>Cidade</CTableHeaderCell>
-                  <CTableHeaderCell>Status</CTableHeaderCell>
-                  <CTableHeaderCell className="text-center">
-                    <CIcon icon={cilCog} />
-                  </CTableHeaderCell>
-                </CTableRow>
-              </CTableHead>
-              <CTableBody>
-                {loading && empresas.length === 0 ? (
-                  <CTableRow>
-                    <CTableDataCell colSpan={7} className="text-center">
-                      <CSpinner />
-                    </CTableDataCell>
-                  </CTableRow>
-                ) : empresas.length > 0 ? (
-                  empresas.map((empresa) => (
-                    <CTableRow key={empresa.Emp_Id}>
-                      <CTableDataCell>{empresa.Emp_Id}</CTableDataCell>
-                      <CTableDataCell className="text-nowrap">
-                        {empresa.Emp_NomeFant}
-                      </CTableDataCell>
-                      <CTableDataCell>{empresa.Emp_Cnpj}</CTableDataCell>
-                      <CTableDataCell>{empresa.Emp_Contrato}</CTableDataCell>
-                      <CTableDataCell>{empresa.Emp_Dt_Cadastro}</CTableDataCell>
-                      <CTableDataCell>{empresa.Emp_Cidade}</CTableDataCell>
-                      <CTableDataCell>
-                        <CBadge
-                          color={empresa.Emp_Status === 'Exportado' ? 'success' : 'warning'}
-                          className="text-nowrap"
-                          style={{ width: '150px' }}
-                        >
-                          {empresa.Emp_Status}
-                        </CBadge>
-                      </CTableDataCell>
-                      <CTableDataCell className="text-left">
-                        <CIcon icon={cilSave} />
-                      </CTableDataCell>
-                    </CTableRow>
-                  ))
-                ) : (
-                  <CTableRow>
-                    <CTableDataCell colSpan={7} className="text-center">
-                      Nenhuma empresa encontrada
-                    </CTableDataCell>
-                  </CTableRow>
-                )}
-              </CTableBody>
-            </CTable>
-          </div>
+          <EmpresaTable empresas={empresas} loading={loading} />
 
           {/* paginacao */}
-          {totalPages > 1 && (
-            <div className="d-flex justify-content-center mt-3">
-              <CPagination>
-                <CPaginationItem
-                  disabled={filters.page === 1 || loading}
-                  onClick={() => handlePageChange(filters.page - 1)}
-                >
-                  {/* simbolo pra pagina anterior */}
-                  &laquo;
-                </CPaginationItem>
-
-                {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                  let pageNum
-                  if (totalPages <= 5) {
-                    pageNum = i + 1
-                  } else if (filters.page <= 3) {
-                    pageNum = i + 1
-                  } else if (filters.page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i
-                  } else {
-                    pageNum = filters.page - 2 + i
-                  }
-
-                  return (
-                    <CPaginationItem
-                      key={pageNum}
-                      active={pageNum === filters.page}
-                      onClick={() => handlePageChange(pageNum)}
-                      disabled={loading}
-                    >
-                      {pageNum}
-                    </CPaginationItem>
-                  )
-                })}
-
-                <CPaginationItem
-                  disabled={filters.page === totalPages || loading}
-                  onClick={() => handlePageChange(filters.page + 1)}
-                >
-                  {/* simbolo pra proxima pagina */}
-                  &raquo;
-                </CPaginationItem>
-              </CPagination>
-            </div>
-          )}
+          <PaginationNav
+            filters={filters}
+            handlePageChange={handlePageChange}
+            loading={loading}
+            totalPages={totalPages}
+          />
         </CCardBody>
       </CCard>
     </CContainer>
