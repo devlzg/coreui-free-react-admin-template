@@ -1,3 +1,5 @@
+import { CAlert, CButton } from '@coreui/react'
+
 export const ErrorMessage = ({ error, fetchEmpresas }) => {
   {
     error && (
