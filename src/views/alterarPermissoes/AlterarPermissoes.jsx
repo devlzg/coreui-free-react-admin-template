@@ -4,18 +4,10 @@ import {
   CCard,
   CCardBody,
   CCardHeader,
-  CCol,
   CContainer,
-  CDropdown,
-  CDropdownItem,
-  CDropdownMenu,
-  CDropdownToggle,
-  CFormInput,
   CFormSelect,
-  CInputGroup,
   CPagination,
   CPaginationItem,
-  CRow,
   CSpinner,
   CTable,
   CTableBody,
@@ -26,8 +18,9 @@ import {
 } from '@coreui/react'
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
-import { UserFilters } from './components/Filters/UserFilters'
+import { UserFilters } from './components/UserFilters/UserFilters'
 import { UserPagination } from './components/UserPagination/UserPagination'
+import { UserErrorMessage } from './components/UserErrorMessage/UserErrorMessage'
 import { Usr_Nac_IdOptions } from './utils/constants'
 
 const AlterarPermissoes = () => {
@@ -267,19 +260,7 @@ const AlterarPermissoes = () => {
           />
 
           {/* msg de loading/erro*/}
-          {loading && (
-            <div className="text-center my-5">
-              <CSpinner />
-              <p>Carregando usuários...</p>
-            </div>
-          )}
-
-          {requestError && (
-            <CAlert color={requestError.color || 'danger'} className="mt-3">
-              <strong>{requestError.message}</strong>
-              {requestError.details && <div className="mt-2">{requestError.details}</div>}
-            </CAlert>
-          )}
+          <UserErrorMessage requestError={requestError} loading={loading} />
 
           {/* tabela de usuarios */}
           {!loading && (
