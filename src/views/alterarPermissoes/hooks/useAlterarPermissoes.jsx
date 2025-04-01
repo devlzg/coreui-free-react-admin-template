@@ -112,6 +112,7 @@ const useAlterarPermissoes = () => {
       }
     }
   }, [fetchUsers, debouncedSearchTerm, accessLevelFilter, sortOption, currentPage, itemsPerPage])
+  // fim da função fetchUsers()
 
   // hook pra limpar o cache quando componentes são desmontados
   useEffect(() => {
