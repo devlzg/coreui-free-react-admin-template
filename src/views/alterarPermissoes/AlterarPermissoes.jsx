@@ -1,27 +1,12 @@
-import {
-  CAlert,
-  CButton,
-  CCard,
-  CCardBody,
-  CCardHeader,
-  CContainer,
-  CFormSelect,
-  CPagination,
-  CPaginationItem,
-  CSpinner,
-  CTable,
-  CTableBody,
-  CTableDataCell,
-  CTableHead,
-  CTableHeaderCell,
-  CTableRow,
-} from '@coreui/react'
+import { CCard, CCardBody, CCardHeader, CContainer } from '@coreui/react'
 import axios from 'axios'
 import React, { useEffect, useRef, useState } from 'react'
+import { SaveButton } from './components/SaveButton/SaveButton'
+import { UserErrorMessage } from './components/UserErrorMessage/UserErrorMessage'
 import { UserFilters } from './components/UserFilters/UserFilters'
 import { UserPagination } from './components/UserPagination/UserPagination'
-import { UserErrorMessage } from './components/UserErrorMessage/UserErrorMessage'
-import { Usr_Nac_IdOptions } from './utils/constants'
+import { UserPaginationControls } from './components/UserPagination/UserPaginationControls'
+import { UserTable } from './components/UserTable/UserTable'
 
 const AlterarPermissoes = () => {
   // estados para dados e carregamento
@@ -265,107 +250,22 @@ const AlterarPermissoes = () => {
           {/* tabela de usuarios */}
           {!loading && (
             <>
-              <div className="table-responsive">
-                <CTable hover responsive>
-                  <CTableHead>
-                    <CTableRow>
-                      <CTableHeaderCell>Nome</CTableHeaderCell>
-                      <CTableHeaderCell>E-mail</CTableHeaderCell>
-                      <CTableHeaderCell className="min-width-150">Nível de acesso</CTableHeaderCell>
-                    </CTableRow>
-                  </CTableHead>
-                  <CTableBody>
-                    {users.length === 0 ? (
-                      <CTableRow>
-                        <CTableDataCell colSpan={7} className="text-center">
-                          Nenhum usuário encontrado
-                        </CTableDataCell>
-                      </CTableRow>
-                    ) : (
-                      users.map((user) => (
-                        <CTableRow key={user.Usr_Id || user.id || user.cpf}>
-                          <CTableDataCell className="text-nowrap">
-                            {user.Usr_Nome || user.nome || user.name}
-                          </CTableDataCell>
-                          <CTableDataCell className="text-nowrap">
-                            {user.Usr_Email || user.email}
-                          </CTableDataCell>
-                          <CTableDataCell>
-                            <CFormSelect
-                              id={`select-${user.Usr_Id || user.id}`}
-                              value={user.Usr_Nac_Id || user.nivelAcesso || '1'}
-                              onChange={(e) =>
-                                handleUsr_Nac_IdChange(user.Usr_Id || user.id, e.target.value)
-                              }
-                              disabled={loading}
-                            >
-                              {Usr_Nac_IdOptions.map((option) => (
-                                <option key={option.value} value={option.value}>
-                                  {option.label}
-                                </option>
-                              ))}
-                            </CFormSelect>
-                          </CTableDataCell>
-                        </CTableRow>
-                      ))
-                    )}
-                  </CTableBody>
-                </CTable>
-              </div>
+              <UserTable
+                users={users}
+                handleUsr_Nac_IdChange={handleUsr_Nac_IdChange}
+                loading={loading}
+              />
 
-              {/* logica da paginação */}
-              {totalPages > 1 && (
-                <div className="d-flex justify-content-center mt-3">
-                  <CPagination>
-                    <CPaginationItem
-                      disabled={currentPage === 1 || loading}
-                      onClick={() => handlePageChange(currentPage - 1)}
-                    >
-                      {/* simbolo pra proxima pagina */}
-                      &laquo;
-                    </CPaginationItem>
+              {/* controle inferior da paginação */}
+              <UserPaginationControls
+                totalPages={totalPages}
+                currentPage={currentPage}
+                loading={loading}
+                handlePageChange={handlePageChange}
+              />
 
-                    {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                      let pageNum
-                      if (totalPages <= 5) {
-                        pageNum = i + 1
-                      } else if (currentPage <= 3) {
-                        pageNum = i + 1
-                      } else if (currentPage >= totalPages - 2) {
-                        pageNum = totalPages - 4 + i
-                      } else {
-                        pageNum = currentPage - 2 + i
-                      }
-
-                      return (
-                        <CPaginationItem
-                          key={pageNum}
-                          active={pageNum === currentPage}
-                          onClick={() => handlePageChange(pageNum)}
-                          disabled={loading}
-                        >
-                          {pageNum}
-                        </CPaginationItem>
-                      )
-                    })}
-
-                    <CPaginationItem
-                      disabled={currentPage === totalPages || loading}
-                      onClick={() => handlePageChange(currentPage + 1)}
-                    >
-                      {/* simbolo pra prox pagina */}
-                      &raquo;
-                    </CPaginationItem>
-                  </CPagination>
-                </div>
-              )}
-
-              <div className="text-right mt-3">
-                {/* botao para aplicar alteracoes */}
-                <CButton color="primary" onClick={handleSaveChanges} disabled={loading}>
-                  {loading ? 'Salvando...' : 'Salvar Alterações'}
-                </CButton>
-              </div>
+              {/* botao para aplicar alteracoes */}
+              <SaveButton handleSaveChanges={handleSaveChanges} loading={loading} />
             </>
           )}
         </CCardBody>
