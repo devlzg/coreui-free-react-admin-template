@@ -5,11 +5,28 @@ import { Filters } from './components/Filters/Filters'
 import { LoadingSpinner } from './components/LoadingSpinner/LoadingSpinner'
 import { PaginationControls } from './components/Pagination/PaginationControls'
 import { PaginationNav } from './components/Pagination/PaginationNav'
+import useEmpresas from './hooks/useEmpresas'
 
 const EmpresaEspelho = () => {
+  const {
+    empresas,
+    loading,
+    error,
+    filters,
+    totalItems,
+    totalPages,
+    handleFilterChange,
+    handlePageChange,
+    fetchEmpresas,
+    handleItemsPerPageChange,
+  } = useEmpresas()
+
+  if (loading && empresas.length === 0) {
+    return <LoadingSpinner />
+  }
+
   return (
     <CContainer>
-      <LoadingSpinner />
       <CCard>
         <CCardHeader>
           <h3>Espelho Empresas</h3>
@@ -17,19 +34,29 @@ const EmpresaEspelho = () => {
 
         <CCardBody>
           {/* filtros */}
-          <Filters />
+          <Filters loading={loading} filters={filters} handleFilterChange={handleFilterChange} />
 
           {/* controles da paginação */}
-          <PaginationControls />
+          <PaginationControls
+            loading={loading}
+            filters={filters}
+            totalItems={totalItems}
+            handleItemsPerPageChange={handleItemsPerPageChange}
+          />
 
           {/* msg de erro */}
-          <ErrorMessage />
+          <ErrorMessage error={error} fetchEmpresas={fetchEmpresas} />
 
           {/* tabela */}
-          <EmpresaTable />
+          <EmpresaTable empresas={empresas} loading={loading} />
 
           {/* paginacao */}
-          <PaginationNav />
+          <PaginationNav
+            loading={loading}
+            filters={filters}
+            totalPages={totalPages}
+            handlePageChange={handlePageChange}
+          />
         </CCardBody>
       </CCard>
     </CContainer>
