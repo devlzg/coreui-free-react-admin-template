@@ -99,8 +99,6 @@ const useEmpresas = () => {
   }, [filters])
 
   const handleFilterChange = (name, value) => {
-    console.log('estou na funcao handlefilterchange')
-    console.log(filters)
     setFilters((prev) => ({
       ...prev,
       [name]: value,
